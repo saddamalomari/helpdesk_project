@@ -3,8 +3,7 @@ const areasData = {
         "العبدلي", "صويلح", "تلاع العلي", "شفا بدران", "أبو نصير",
         "وادي السير", "سحاب", "مرج الحمام", "الجبيهة", 
         "بلدية الجيزة: الجيزة", "بلدية الجيزة: القسطل", "بلدية الجيزة: أم العمد", "بلدية الجيزة: اللبن",
-        "بلدية سحاب: سحاب",
-        "بلدية أم البساتين: أم البساتين", "بلدية أم البساتين: الفردوس",
+        "بلدية سحاب: سحاب", "بلدية أم البساتين: أم البساتين", "بلدية أم البساتين: الفردوس",
         "بلدية مؤتة والمزار: مؤتة", "بلدية مؤتة والمزار: المزار"
     ],
     "إربد": [
@@ -22,19 +21,21 @@ const areasData = {
         "بلدية أم الجمال: أم الجمال", "بلدية الصالحية ونايفة: الصالحية", "بلدية الصالحية ونايفة: نايفة"
     ],
     "البلقاء": [
-        "بلدية السلط الكبرى: السلط", "بلدية السلط الكبرى: وادي السير (جزء منها)", "بلدية السلط الكبرى: يرقا", "بلدية السلط الكبرى: عيرا",
-        "بلدية الفحيص: الفحيص", "بلدية ماحص: ماحص", "بلدية الشونة الجنوبية: الشونة الجنوبية", "بلدية الشونة الجنوبية: الكرامة"
+        "بلدية السلط الكبرى: السلط", "بلدية السلط الكبرى: وادي السير", "بلدية السلط الكبرى: يرقا", 
+        "بلدية السلط الكبرى: عيرا", "بلدية الفحيص: الفحيص", "بلدية ماحص: ماحص", 
+        "بلدية الشونة الجنوبية: الشونة الجنوبية", "بلدية الشونة الجنوبية: الكرامة"
     ],
     "الكرك": [
         "بلدية الكرك الكبرى: الكرك", "بلدية الكرك الكبرى: عي", "بلدية الكرك الكبرى: الثنية",
         "بلدية المزار الجنوبي: المزار الجنوبي", "بلدية القصر: القصر", "بلدية القصر: الربة"
     ],
     "معان": [
-        "بلدية معان الكبرى: معان", "بلدية الشوبك الجديدة: الشوبك", "بلدية الشوبك الجديدة: العبدلية", "بلدية الشوبك الجديدة: حمزة",
-        "بلدية الحسينية الجديدة: الحسينية", "بلدية الحسينية الجديدة: الهاشمية", "بلدية الجفر: الجفر"
+        "بلدية معان الكبرى: معان", "بلدية الشوبك الجديدة: الشوبك", "بلدية الشوبك الجديدة: العبدلية", 
+        "بلدية الشوبك الجديدة: حمزة", "بلدية الحسينية الجديدة: الحسينية", 
+        "بلدية الحسينية الجديدة: الهاشمية", "بلدية الجفر: الجفر"
     ],
     "العقبة": [
-        "سلطة منطقة العقبة الاقتصادية الخاصة: مدينة العقبة والمناطق الاقتصادية", "بلدية القويرة: القويرة"
+        "سلطة منطقة العقبة الاقتصادية الخاصة: مدينة العقبة", "بلدية القويرة: القويرة"
     ],
     "جرش": [
         "بلدية جرش الكبرى: جرش", "بلدية سوف: سوف", "بلدية المصطبة: المصطبة"
@@ -57,10 +58,14 @@ const provinceCodes = {
 };
 
 document.addEventListener('DOMContentLoaded', function() {
-    const API_BASE_URL = 'http://localhost:3000';
+    // ✅ استخدام رابط نسبي ليعمل على سيرفر Render تلقائياً
+    const API_BASE_URL = ''; 
     
-    // 1. التحقق من التوكن
-    const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+    // 1. التحقق من التوكن لضمان صلاحية الجلسة
+    const token = localStorage.getItem('token') || 
+                  localStorage.getItem('authToken') || 
+                  localStorage.getItem('userToken');
+
     if (!token) {
         alert("يرجى تسجيل الدخول أولاً");
         window.location.href = 'login.html';
@@ -73,12 +78,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const successBox = document.getElementById('success-message');
     const refNumberSpan = document.getElementById('reference-number-span');
     const copyBtn = document.getElementById('copy-btn');
-    
-    // حقول التعبئة التلقائية
     const fullNameInput = document.getElementById('full_name');
     const phoneInput = document.getElementById('phone');
 
-    // دالة تعبئة المناطق (بناءً على المحافظة المختارة)
+    // دالة تعبئة المناطق بناءً على المحافظة
     function populateAreas() {
         const selectedProvince = provinceSelect.value;
         areaSelect.innerHTML = '<option value="">اختر المنطقة</option>';
@@ -93,34 +96,30 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // 2. دالة جلب بيانات المستخدم (التعبئة التلقائية)
+    // 2. تعبئة بيانات المستخدم تلقائياً من السيرفر
     async function fetchUserData() {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/profile`, {
+            const response = await fetch(`/api/profile`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
 
             if (response.ok) {
                 const userData = await response.json();
 
-                // تعبئة الاسم
                 if (fullNameInput) {
                     fullNameInput.value = userData.full_name || '';
-                    fullNameInput.setAttribute('readonly', true);
-                    fullNameInput.style.backgroundColor = '#e9ecef';
+                    fullNameInput.readOnly = true;
+                    fullNameInput.style.backgroundColor = '#f8f9fa';
                 }
 
-                // تعبئة الهاتف
                 if (phoneInput) {
                     phoneInput.value = userData.phone || '';
-                    phoneInput.setAttribute('readonly', true);
-                    phoneInput.style.backgroundColor = '#e9ecef';
+                    phoneInput.readOnly = true;
+                    phoneInput.style.backgroundColor = '#f8f9fa';
                 }
 
-                // تعبئة المحافظة وتحديث المناطق
                 if (provinceSelect && userData.province) {
                     provinceSelect.value = userData.province;
-                    // 🔥 استدعاء دالة المناطق يدوياً بعد تعبئة المحافظة
                     populateAreas();
                 }
             }
@@ -129,13 +128,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // استدعاء التعبئة التلقائية عند التحميل
     fetchUserData();
-
-    // الاستماع لتغيير المحافظة يدوياً
     provinceSelect.addEventListener('change', populateAreas);
 
-    // 3. معالجة إرسال النموذج
+    // 3. معالجة إرسال الشكوى
     complaintForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
@@ -148,32 +144,27 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const formData = new FormData(complaintForm);
-        
-        // تعطيل الزر أثناء الإرسال
         const submitBtn = complaintForm.querySelector('button[type="submit"]');
         const originalText = submitBtn.innerHTML;
         submitBtn.disabled = true;
         submitBtn.innerHTML = 'جاري الإرسال...';
 
         try {
-            const response = await fetch(`${API_BASE_URL}/api/complaints`, {
+            const response = await fetch(`/api/complaints`, {
                 method: 'POST',
-                headers: { 
-                    'Authorization': `Bearer ${token}` // ✅ إضافة التوكن ضروري جداً
-                },
+                headers: { 'Authorization': `Bearer ${token}` },
                 body: formData 
             });
             
             const data = await response.json();
             
             if (response.ok) {
-                // حساب الكود الخاص بالمنطقة
+                // توليد الرقم المرجعي الذكي
                 const provinceCode = provinceCodes[selectedProvince];
                 const areaList = areasData[selectedProvince];
                 const areaIndex = areaList.indexOf(selectedArea);
                 const areaCode = areaIndex !== -1 ? areaIndex + 1 : '0';
 
-                // توليد الرقم المرجعي حسب التنسيق الخاص بك
                 const referenceNumber = `TIC_${provinceCode}_${areaCode}_${data.id}`;
 
                 refNumberSpan.textContent = referenceNumber;
@@ -191,15 +182,10 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
+    // دالة نسخ الرقم المرجعي
     copyBtn.addEventListener('click', () => {
-        const textToCopy = refNumberSpan.textContent;
-        navigator.clipboard.writeText(textToCopy)
-            .then(() => {
-                alert('✅ تم نسخ الرقم المرجعي بنجاح!');
-            })
-            .catch(err => {
-                console.error('فشل في النسخ:', err);
-                alert('فشل في نسخ الرقم، يرجى النسخ يدوياً.');
-            });
+        navigator.clipboard.writeText(refNumberSpan.textContent)
+            .then(() => alert('✅ تم نسخ الرقم المرجعي بنجاح!'))
+            .catch(() => alert('فشل النسخ، يرجى النسخ يدوياً.'));
     });
 });

@@ -57,7 +57,8 @@ document.addEventListener('DOMContentLoaded', function() {
         const dataToSend = { name, phone, email, password, role, province, employee_id };
 
         try {
-            const res = await fetch('http://localhost:3000/api/signup', {
+            // ✅ التعديل الجوهري: استخدام مسار نسبي ليعمل على الرابط العالمي تلقائياً
+            const res = await fetch('/api/signup', {
                 method:'POST',
                 headers:{ 'Content-Type':'application/json' },
                 body: JSON.stringify(dataToSend) 
@@ -74,7 +75,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
         } catch(err) { 
             console.error(err); 
-            alert("تعذر الاتصال بالسيرفر."); 
+            alert("تعذر الاتصال بالسيرفر. يرجى التحقق من جودة الاتصال."); 
         }
     });
 

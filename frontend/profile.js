@@ -27,23 +27,23 @@ document.addEventListener('DOMContentLoaded', function() {
         if(loadingMessage) loadingMessage.style.display = 'block';
         if(profileDataContainer) profileDataContainer.style.display = 'none';
 
-        // ✅ التعديل الجوهري: البحث عن التوكن بكل الأسماء المحتملة
+        // ✅ التحقق من التوكن بكل الأسماء المحتملة لضمان استمرار الجلسة
         const userToken = localStorage.getItem('token') || 
                           localStorage.getItem('authToken') || 
                           localStorage.getItem('userToken'); 
 
-        console.log("حالة التوكن:", userToken ? "موجود" : "غير موجود"); // للتشخيص
+        console.log("حالة التوكن:", userToken ? "موجود" : "غير موجود");
 
         if (!userToken) {
             console.error("لم يتم العثور على التوكن في التخزين المحلي.");
-            // ⚠️ ملاحظة: أوقفت الطرد التلقائي مؤقتاً لترى الخطأ، يمكنك تفعيله لاحقاً
-            // window.location.href = 'login.html';
-            displayError('خطأ: لم يتم العثور على تسجيل دخول (Token missing). يرجى تسجيل الدخول مرة أخرى.');
+            displayError('خطأ: لم يتم العثور على تسجيل دخول. يرجى تسجيل الدخول مرة أخرى.');
+            // window.location.href = 'login.html'; // يمكنك تفعيلها للتحويل التلقائي
             return;
         }
         
         try {
-            const response = await fetch('http://localhost:3000/api/profile', {
+            // ✅ التعديل الجوهري: استخدام مسار نسبي ليعمل على الرابط العالمي تلقائياً
+            const response = await fetch('/api/profile', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -75,7 +75,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         } catch (error) {
             console.error('خطأ في الاتصال:', error);
-            displayError('فشل الاتصال بالسيرفر. تأكد من تشغيل الباك إند (Node.js).');
+            displayError('فشل الاتصال بالسيرفر. يرجى التأكد من جودة الإنترنت في الموقع.');
         }
     }
 

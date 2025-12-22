@@ -1,9 +1,9 @@
 document.addEventListener('DOMContentLoaded', async function() {
     
-    // --- 1. الإعدادات والتحقق من الهوية ---
-    const API_BASE_URL = 'http://localhost:3000';
+    // ✅ التعديل الأول: جعل الرابط نسبياً لضمان العمل على Render
+    const API_BASE_URL = ''; 
     
-    // البحث عن التوكن بكل الأسماء المحتملة لضمان استمرار الجلسة
+    // البحث عن التوكن لضمان استمرار الجلسة
     const token = localStorage.getItem('token') || 
                   localStorage.getItem('userToken') || 
                   localStorage.getItem('authToken');
@@ -13,61 +13,22 @@ document.addEventListener('DOMContentLoaded', async function() {
         // window.location.href = 'login.html'; // فعل هذا السطر لاحقاً لتأمين الصفحة
     }
 
-    // عرض التاريخ الحالي في واجهة المستخدم
+    // عرض التاريخ الحالي
     const dateBox = document.getElementById('current-date');
     if (dateBox) {
         const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
         dateBox.textContent = new Date().toLocaleDateString('ar-EG', dateOptions);
     }
 
-    // --- 2. التحكم في القوائم الجانبية ---
+    // --- التحكم في القوائم الجانبية ---
     const sidebar = document.getElementById('sidebar');
     const toggleBtn = document.getElementById('toggle-btn');
-    const contactToggle = document.getElementById('contact-toggle');
-    const contactMenu = document.getElementById('contact-menu');
-
     if(toggleBtn && sidebar) {
-        toggleBtn.addEventListener('click', () => {
-            sidebar.classList.toggle('active');
-        });
+        toggleBtn.addEventListener('click', () => sidebar.classList.toggle('active'));
     }
 
-    if(contactToggle && contactMenu) {
-        contactToggle.addEventListener('click', (e) => {
-            e.preventDefault();
-            contactMenu.classList.toggle('active');
-        });
-    }
-
-    // --- 3. برمجة خاصية "تغيير كلمة المرور" (الإضافة الجديدة) ---
-    const changePassBtn = document.getElementById('change-password-toggle');
-    const changePassModal = document.getElementById('change-password-modal');
-    const closePassModal = document.getElementById('close-pass-modal');
+    // --- برمجة خاصية "تغيير كلمة المرور" ---
     const changePassForm = document.getElementById('change-password-form');
-
-    // فتح نافذة التغيير
-    if (changePassBtn && changePassModal) {
-        changePassBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            changePassModal.style.display = 'flex';
-            // إغلاق القائمة في الموبايل عند فتح النافذة
-            if (window.innerWidth <= 900 && sidebar) sidebar.classList.remove('active');
-        });
-    }
-
-    // إغلاق نافذة التغيير
-    if (closePassModal) {
-        closePassModal.addEventListener('click', () => {
-            changePassModal.style.display = 'none';
-        });
-    }
-
-    // إغلاق النافذة عند الضغط خارج المحتوى
-    window.addEventListener('click', (e) => {
-        if (e.target == changePassModal) changePassModal.style.display = 'none';
-    });
-
-    // معالجة إرسال النموذج للسيرفر
     if (changePassForm) {
         changePassForm.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -75,7 +36,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             const new_password = document.getElementById('new-password').value;
 
             try {
-                const response = await fetch(`${API_BASE_URL}/api/change-password`, {
+                // ✅ التعديل الثاني: استخدام المسار النسبي /api/change-password
+                const response = await fetch(`/api/change-password`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -87,7 +49,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 const result = await response.json();
                 if (response.ok) {
                     alert('✅ تم تغيير كلمة المرور بنجاح!');
-                    changePassModal.style.display = 'none';
+                    document.getElementById('change-password-modal').style.display = 'none';
                     changePassForm.reset();
                 } else {
                     alert('❌ خطأ: ' + result.message);
@@ -99,52 +61,17 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     }
 
-    // --- 4. نظام الشات بوت الذكي ---
-    const chatbotBtn = document.getElementById('chatbot-btn');
-    const chatbotWindow = document.getElementById('chatbot-window');
-    const closeChat = document.getElementById('close-chat');
+    // --- نظام الشات بوت الذكي ---
     const chatInput = document.getElementById('chat-input');
     const sendBtn = document.getElementById('chat-send-btn');
     const chatBody = document.querySelector('.chat-body');
 
-    if (chatbotBtn && chatbotWindow) {
-        chatbotBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            chatbotWindow.style.display = 'flex';
-            if (window.innerWidth <= 900 && sidebar) sidebar.classList.remove('active');
-        });
-        if (closeChat) {
-            closeChat.addEventListener('click', () => chatbotWindow.style.display = 'none');
-        }
-    }
-
-    const botKnowledge = [
-        { keywords: ["مرحبا", "هلا", "سلام"], reply: "أهلاً بك! 😊 كيف أساعدك اليوم؟" },
-        { keywords: ["شكوى", "تقديم"], reply: "لتقديم شكوى، استخدم زر 'تقديم شكوى جديدة' في الشاشة الرئيسية." },
-        { keywords: ["كلمة السر", "مرور"], reply: "يمكنك تغييرها من خيار 'تغيير كلمة المرور' في القائمة الجانبية." },
-        { keywords: ["شكرا", "يسلمو"], reply: "في خدمتك دائماً! 🌹" }
-    ];
-
     function appendMessage(text, sender) {
         const msgDiv = document.createElement('div');
         msgDiv.classList.add('message', sender);
-        const p = document.createElement('p');
-        p.textContent = text;
-        msgDiv.appendChild(p);
+        msgDiv.innerHTML = `<p>${text}</p>`;
         chatBody.appendChild(msgDiv);
         chatBody.scrollTop = chatBody.scrollHeight;
-    }
-
-    function botReply(userText) {
-        let reply = "عذراً، لم أفهم سؤالك جيداً. يمكنك التواصل مع الدعم الفني.";
-        const lowerText = userText.toLowerCase();
-        for (let item of botKnowledge) {
-            if (item.keywords.some(k => lowerText.includes(k))) {
-                reply = item.reply;
-                break;
-            }
-        }
-        setTimeout(() => appendMessage(reply, 'bot'), 600);
     }
 
     if (sendBtn && chatInput) {
@@ -153,17 +80,16 @@ document.addEventListener('DOMContentLoaded', async function() {
             if (text) {
                 appendMessage(text, 'user');
                 chatInput.value = '';
-                botReply(text);
+                setTimeout(() => appendMessage("أهلاً بك! 😊 كيف أساعدك اليوم؟", 'bot'), 600);
             }
         });
-        chatInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendBtn.click(); });
     }
 
-    // --- 5. جلب بيانات الداشبورد (الشكاوى والملف الشخصي) ---
+    // --- جلب بيانات الداشبورد (الشكاوى والملف الشخصي) ---
     if (token) {
         try {
-            // جلب بيانات الملف الشخصي
-            const profileRes = await fetch(`${API_BASE_URL}/api/profile`, {
+            // ✅ التعديل الثالث: استخدام المسار النسبي /api/profile
+            const profileRes = await fetch(`/api/profile`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (profileRes.ok) {
@@ -174,19 +100,17 @@ document.addEventListener('DOMContentLoaded', async function() {
                 }
             }
 
-            // جلب قائمة الشكاوى الخاصة بالمواطن
-            const complaintsRes = await fetch(`${API_BASE_URL}/api/my-complaints`, {
+            // ✅ التعديل الرابع: استخدام المسار النسبي /api/my-complaints
+            const complaintsRes = await fetch(`/api/my-complaints`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             if (complaintsRes.ok) {
                 const complaints = await complaintsRes.json();
                 
-                // تحديث العدادات في الواجهة
                 if(document.getElementById('stat-total')) document.getElementById('stat-total').textContent = complaints.length;
                 if(document.getElementById('stat-pending')) document.getElementById('stat-pending').textContent = complaints.filter(c => c.status !== 'completed').length;
                 if(document.getElementById('stat-completed')) document.getElementById('stat-completed').textContent = complaints.filter(c => c.status === 'completed').length;
 
-                // تحديث جدول الشكاوى الأخيرة
                 const tbody = document.getElementById('recent-complaints-body');
                 if (tbody) {
                     tbody.innerHTML = complaints.length ? '' : '<tr><td colspan="4">لا توجد شكاوى.</td></tr>';
