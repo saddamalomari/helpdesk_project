@@ -32,12 +32,12 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// تقديم الملفات الثابتة
+// تأكد من أن السيرفر يقرأ مجلد frontend
 app.use(express.static(path.join(__dirname, 'frontend')));
-app.use('/uploads', express.static(path.join(__dirname, 'frontend/uploads')));
 
+// تعديل المسار لفتح صفحة login.html بدلاً من index.html
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'frontend', 'login.html')); // تأكد أن اسم الملف login.html وليس index.html
+    res.sendFile(path.join(__dirname, 'frontend', 'login.html')); 
 });
 
 // Middleware للتحقق من التوكن
