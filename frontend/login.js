@@ -8,7 +8,8 @@ loginForm.addEventListener('submit', async (e) => {
     if (!email || !password) return alert("يرجى ملء جميع الحقول!");
     
     try {
-        const res = await fetch('http://localhost:3000/api/login', {
+        // ✅ التعديل الجوهري: استخدام مسار نسبي ليعمل على Render تلقائياً
+        const res = await fetch('/api/login', {
             method:'POST',
             headers:{ 'Content-Type':'application/json' },
             body: JSON.stringify({ email, password })
@@ -37,7 +38,6 @@ loginForm.addEventListener('submit', async (e) => {
             } else if (userRole === 'citizen') {
                 window.location.href = 'citizen-dashboard.html'; 
             } else {
-
                 alert("تم تسجيل الدخول بنجاح، لكن دور المستخدم غير محدد.");
                 window.location.href = 'index.html'; 
             }
