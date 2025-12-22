@@ -10,14 +10,14 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 
 // ✅ كود إنشاء مجلد uploads تلقائياً إذا لم يكن موجوداً
-const dir = path.join(__dirname, '../frontend/uploads');
+const dir = path.join(__dirname, 'frontend/uploads');
 if (!fs.existsSync(dir)){
     fs.mkdirSync(dir, { recursive: true });
     console.log("✅ Created uploads directory successfully.");
 }
 
 app.use(cors());
-app.use(express.json()); 
+app.use(express.json());
 
 // إعداد Multer
 const storage = multer.diskStorage({
@@ -33,11 +33,11 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // تقديم الملفات الثابتة
-app.use(express.static(path.join(__dirname, '../frontend')));
-app.use('/uploads', express.static(path.join(__dirname, '../frontend/uploads')));
+app.use(express.static(path.join(__dirname, 'frontend')));
+app.use('/uploads', express.static(path.join(__dirname, 'frontend/uploads')));
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/index.html'));
+    res.sendFile(path.join(__dirname, 'frontend', 'login.html')); // تأكد أن اسم الملف login.html وليس index.html
 });
 
 // Middleware للتحقق من التوكن
