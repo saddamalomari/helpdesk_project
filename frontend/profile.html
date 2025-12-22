@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ملفي الشخصي</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="profile.css"> 
+</head>
+<body>
+
+<div class="profile-container">
+    <header>
+        <a href="citizen-dashboard.html" class="back-link">
+            <i class="fas fa-arrow-right"></i> العودة للوحة التحكم
+        </a>
+        <h1>👤 ملفي الشخصي</h1>
+        <p>هنا يمكنك مراجعة بياناتك المسجلة في النظام.</p>
+    </header>
+    
+    <div id="loading-message" class="message-box loading-box">
+        <i class="fas fa-spinner fa-spin"></i> جاري تحميل البيانات...
+    </div>
+
+    <div id="profile-data" class="profile-card" style="display:none;">
+        
+        <div class="data-group">
+            <label><i class="fas fa-id-card"></i> الاسم الكامل</label>
+            <p id="full_name" class="data-field"></p>
+        </div>
+
+        <div class="data-group">
+            <label><i class="fas fa-phone-alt"></i> رقم الهاتف</label>
+            <p id="phone" class="data-field"></p>
+        </div>
+
+        <div class="data-group">
+            <label><i class="fas fa-envelope"></i> البريد الإلكتروني</label>
+            <p id="email" class="data-field"></p>
+        </div>
+
+        <div class="data-group">
+            <label><i class="fas fa-map-marker-alt"></i> المحافظة</label>
+            <p id="province" class="data-field"></p>
+        </div>
+        
+    </div>
+
+</div>
+
+<script src="profile.js"></script> 
+</body>
+</html>

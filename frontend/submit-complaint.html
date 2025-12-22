@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تقديم شكوى</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="submit-complaint.css">
+</head>
+<body>
+
+<div class="complaint-container">
+    <h2>تقديم شكوى</h2>
+    <form id="complaint-form" action="/api/complaints" method="POST" enctype="multipart/form-data">
+        
+        <label for="full_name"><i class="fas fa-user"></i> الاسم الكامل</label>
+        <input type="text" id="full_name" name="full_name" placeholder="الاسم الكامل" required>
+
+        <label for="phone"><i class="fas fa-phone-alt"></i> رقم الهاتف</label>
+        <input type="text" id="phone" name="phone" placeholder="رقم الهاتف" required>
+
+        <label for="province"><i class="fas fa-map-marker-alt"></i> المحافظة</label>
+        <select name="province" id="province" required>
+                <option value="">اختر المحافظة</option>
+    <option value="عمان">عمان</option>
+    <option value="إربد">إربد</option>
+    <option value="الزرقاء">الزرقاء</option>
+    <option value="المفرق">المفرق</option>
+    <option value="البلقاء">البلقاء</option>
+    <option value="الكرك">الكرك</option>
+    <option value="معان">معان</option>
+    <option value="العقبة">العقبة</option>
+    <option value="جرش">جرش</option>
+    <option value="عجلون">عجلون</option>
+    <option value="مأدبا">مأدبا</option>
+    <option value="الطفيلة">الطفيلة</option>
+        </select>
+
+        <label for="area"><i class="fas fa-map-pin"></i> المنطقة</label>
+        <select name="area" id="area" required>
+            <option value="">اختر المنطقة</option>
+        </select>
+
+        <label for="complaint_type"><i class="fas fa-list-alt"></i> نوع الشكوى</label>
+        <select name="complaint_type" id="complaint_type" required>
+            <option value="">اختر نوع الشكوى</option>
+            <option value="حفرة في الطريق">حفرة في الطريق</option>
+            <option value="اغلاق شارع">اغلاق شارع</option>
+            <option value="رش الحشرات">رش الحشرات</option>
+            <option value="تعبيد الطرق">تعبيد الطرق</option>
+            <option value="تعدي على الطريق العام">تعدي على الطريق العام</option>
+
+        </select>
+
+        <label for="privacy"><i class="fas fa-lock"></i> الخصوصية</label>
+        <select name="privacy" id="privacy" required>
+            <option value="">اختر الخصوصية</option>
+            <option value="عام">عام</option>
+            <option value="خاص">خاص</option>
+        </select>
+
+        <label for="description"><i class="fas fa-comment-dots"></i> وصف الشكوى</label>
+        <textarea name="description" id="description" placeholder="اكتب وصف الشكوى هنا" rows="5" required></textarea>
+
+        <div class="attachment-group">
+            <label for="photo-attachment"><i class="fas fa-camera"></i> إرفاق صورة (اختياري)</label>
+            <input type="file" id="photo-attachment" name="photo_attachment" accept="image/jpeg, image/png, image/gif">
+        </div>
+        
+        <div class="attachment-group">
+            <label for="video-attachment"><i class="fas fa-video"></i> إرفاق فيديو (اختياري)</label>
+            <input type="file" id="video-attachment" name="video_attachment" accept="video/mp4, video/quicktime, video/avi">
+        </div>
+        
+        <button type="submit"><i class="fas fa-paper-plane"></i> إرسال الشكوى</button>
+    </form>
+    
+    <div id="success-message" class="success-box" style="display: none;">
+        <h3>✅ تم تقديم الشكوى بنجاح!</h3>
+        <p>الرجاء الاحتفاظ بالرقم المرجعي لمتابعة حالة الشكوى:</p>
+        <div class="ref-display">
+            <span id="reference-number-span" class="ref-number"></span>
+            <button id="copy-btn" class="copy-btn">
+                <i class="fas fa-copy"></i> نسخ
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<script src="submit-complaint.js"></script>
+</body>
+</html>

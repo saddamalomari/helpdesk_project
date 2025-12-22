@@ -1,0 +1,333 @@
+/* =========================================
+   1. المتغيرات والألوان (الثيم الذهبي والداكن)
+   ========================================= */
+:root {
+    /* الألوان الأساسية */
+    --bg-color: #f4f7f6;
+    --dark-navy: #1a1a2e;       /* لون البطاقات الداكنة */
+    --card-white: #ffffff;
+    --text-primary: #2c3e50;
+    --text-secondary: #7f8c8d;
+    
+    /* التدرج الذهبي */
+    --gold-start: #bf953f;
+    --gold-mid: #fcf6ba;
+    --gold-end: #b38728;
+    --gold-gradient: linear-gradient(135deg, #bf953f, #aa771c);
+    
+    /* ألوان الحالة */
+    --danger: #e74c3c;
+    --success: #2ecc71;
+    --info: #3498db;
+    
+    /* الظلال */
+    --shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-color);
+    margin: 0;
+    padding: 0;
+    direction: rtl;
+    color: var(--text-primary);
+}
+
+/* =========================================
+   2. الهيدر (Header)
+   ========================================= */
+.header {
+    background: var(--dark-navy);
+    color: white;
+    padding: 15px 0;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    margin-bottom: 30px;
+    border-bottom: 2px solid var(--gold-start); /* خط ذهبي أسفل الهيدر */
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    background: linear-gradient(to right, #bf953f, #fcf6ba, #bf953f);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent; /* نص ذهبي */
+    font-weight: 800;
+}
+
+.logout-btn {
+    text-decoration: none;
+    color: #fff;
+    background: rgba(255,255,255,0.1);
+    padding: 8px 15px;
+    border-radius: 5px;
+    transition: 0.3s;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.logout-btn:hover {
+    background: var(--danger);
+}
+
+/* =========================================
+   3. الحاوية الرئيسية والشبكة
+   ========================================= */
+.dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px 40px 20px;
+}
+
+/* شبكة الإحصائيات العلوية */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    padding: 20px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    box-shadow: var(--shadow);
+    transition: transform 0.3s;
+}
+
+.stat-card:hover { transform: translateY(-5px); }
+
+/* البطاقات الداكنة */
+.dark-card {
+    background: var(--dark-navy);
+    color: white;
+    border: 1px solid var(--gold-start);
+}
+
+.stat-card .icon {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    background: rgba(191, 149, 63, 0.2); /* خلفية ذهبية شفافة */
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.8rem;
+    margin-left: 15px;
+}
+
+.gold-text { color: var(--gold-start); }
+
+.stat-card .info h3 { margin: 0; font-size: 0.9rem; opacity: 0.8; font-weight: normal; }
+.stat-card .info .number { font-size: 2rem; font-weight: bold; color: var(--gold-mid); }
+
+/* تخطيط الصفحة (الجدول + النموذج) */
+.admin-grid-layout {
+    display: grid;
+    grid-template-columns: 2fr 1fr; /* الجدول يأخذ مساحة ضعف النموذج */
+    gap: 25px;
+}
+
+@media (max-width: 992px) {
+    .admin-grid-layout { grid-template-columns: 1fr; } /* عمود واحد في الموبايل */
+}
+
+/* =========================================
+   4. البطاقات العامة والنماذج
+   ========================================= */
+.content-card {
+    background: var(--card-white);
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: var(--shadow);
+    border-top: 4px solid var(--gold-start); /* لمسة ذهبية علوية */
+    position: relative;
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 15px;
+}
+
+/* النص الذهبي المتدرج للعناوين */
+.gold-gradient-text {
+    margin: 0;
+    font-size: 1.3rem;
+    background: linear-gradient(to right, #b88a4d, #d4af37, #b88a4d);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    font-weight: bold;
+}
+
+/* مربع البحث */
+.search-box {
+    position: relative;
+}
+.search-box input {
+    padding: 8px 30px 8px 10px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    outline: none;
+    font-size: 0.9rem;
+    transition: 0.3s;
+}
+.search-box input:focus { border-color: var(--gold-start); box-shadow: 0 0 5px rgba(191, 149, 63, 0.2); }
+.search-box i {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    color: #ccc;
+}
+
+/* =========================================
+   5. الجدول الحديث (Modern Table)
+   ========================================= */
+.table-responsive { overflow-x: auto; }
+
+.modern-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.modern-table th {
+    background-color: #f8f9fa;
+    color: #555;
+    padding: 12px;
+    text-align: right;
+    font-weight: 600;
+    border-bottom: 2px solid #eee;
+}
+
+.modern-table td {
+    padding: 12px;
+    border-bottom: 1px solid #f0f0f0;
+    color: #333;
+    vertical-align: middle;
+}
+
+.modern-table tr:hover {
+    background-color: #fffbf2; /* لون ذهبي باهت جداً عند التحويم */
+}
+
+/* أزرار الإجراءات في الجدول */
+.icon-btn {
+    border: none;
+    background: none;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 5px;
+    margin-left: 5px;
+    transition: 0.2s;
+}
+.edit-btn { color: var(--info); }
+.delete-btn { color: var(--danger); }
+.icon-btn:hover { transform: scale(1.2); }
+
+/* =========================================
+   6. النماذج والأزرار (Forms & Buttons)
+   ========================================= */
+.input-group { margin-bottom: 15px; }
+.input-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: var(--secondary-color);
+    font-size: 0.9rem;
+}
+
+.input-group input, .input-group select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: #fdfdfd;
+    box-sizing: border-box;
+    font-family: inherit;
+    transition: 0.3s;
+}
+
+.input-group input:focus, .input-group select:focus {
+    border-color: var(--gold-start);
+    outline: none;
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(191, 149, 63, 0.1);
+}
+
+/* الزر الذهبي */
+.gold-btn {
+    width: 100%;
+    padding: 12px;
+    background: var(--gold-gradient);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 10px rgba(170, 119, 28, 0.2);
+}
+
+.gold-btn:hover {
+    background: linear-gradient(135deg, #aa771c, #bf953f);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(170, 119, 28, 0.3);
+}
+
+/* =========================================
+   7. النافذة المنبثقة (Modal)
+   ========================================= */
+.modal {
+    display: none; /* مخفية افتراضياً */
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.6); /* خلفية معتمة */
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content {
+    width: 90%;
+    max-width: 500px;
+    animation: slideDown 0.3s ease-out;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.close-btn {
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #aaa;
+    transition: 0.2s;
+}
+.close-btn:hover { color: var(--danger); }
+
+@keyframes slideDown {
+    from { transform: translateY(-50px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}

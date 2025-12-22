@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>متابعة حالة الشكوى</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="follow-up.css"> 
+</head>
+<body>
+
+<div class="follow-up-container">
+    <h2>🔎 متابعة حالة الشكوى</h2>
+    <p>أدخل الرقم المرجعي الخاص بشكواك (بالصيغة TIC_المحافظة_المنطقة_الرقم التسلسلي):</p>
+    
+    <div class="search-box">
+        <input 
+            type="text" 
+            id="ref-number" 
+            placeholder="مثال: TIC_1_2_1001" 
+            dir="ltr" 
+            required
+            pattern="TIC_[0-9]+_[0-9]+_[0-9]+"
+            title="يجب أن يبدأ الرقم بـ TIC_ يليه ثلاثة أرقام مفصولة بشرطة سفلية (مثال: TIC_1_2_1001)."
+        >
+        <button id="check-btn"><i class="fas fa-search"></i> تحقق</button>
+    </div>
+    
+    <div class="results-area">
+        <table id="complaints-table">
+            <thead>
+                <tr>
+                    <th>الرقم المرجعي</th>
+                    <th>الاسم الكامل</th>
+                    <th>المحافظة</th>
+                    <th>المنطقة</th>
+                    <th>نوع الشكوى</th>
+                    <th>الحالة</th>
+                    <th>الملاحظات</th>
+                    <th>وصف الشكوى</th> 
+                </tr>
+            </thead>
+            <tbody>
+                </tbody>
+        </table>
+    </div>
+
+</div>
+
+<script src="follow-up.js"></script> 
+</body>
+</html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل حساب جديد</title>
+    <link rel="stylesheet" href="signup.css">
+</head>
+<body>
+
+    <div class="container">
+        <h2>إنشاء حساب جديد</h2>
+
+        <div class="role-selection">
+            <label>التسجيل كـ:</label>
+            <div class="radio-group">
+                <input type="radio" id="role-citizen" name="role" value="citizen" checked>
+                <label for="role-citizen">مواطن</label>
+                
+                <input type="radio" id="role-employee" name="role" value="employee">
+                <label for="role-employee">موظف</label>
+            </div>
+        </div>
+        
+        <form id="signup-form">
+            <input type="text" name="name" placeholder="الاسم الكامل" required>
+            <input type="text" name="phone" placeholder="رقم الهاتف" required>
+            <input type="email" name="email" placeholder="البريد الإلكتروني" required>
+            <input type="password" name="password" placeholder="كلمة المرور" required>
+            <input type="password" name="confirm_password" placeholder="تأكيد كلمة المرور" required>
+            
+            <div id="citizen-fields" class="form-group visible">
+                <select name="province" required>
+                    <option value="">-- اختر المحافظة --</option>
+                    <option value="عمان">عمان</option>
+                    <option value="الزرقاء">الزرقاء</option>
+                    <option value="إربد">إربد</option>
+                    <option value="عجلون">عجلون</option>
+                    <option value="جرش">جرش</option>
+                    <option value="المفرق">المفرق</option>
+                    <option value="البلقاء">البلقاء</option>
+                    <option value="مأدبا">مأدبا</option>
+                    <option value="الكرك">الكرك</option>
+                    <option value="الطفيلة">الطفيلة</option>
+                    <option value="معان">معان</option>
+                    <option value="العقبة">العقبة</option>
+                </select>
+            </div>
+
+            <div id="employee-fields" class="form-group">
+                <input type="text" name="employee_id" placeholder="الرقم الوظيفي المعتمد" id="employee-id-input">
+            </div>
+            
+            <button type="submit">تسجيل</button>
+        </form>
+
+        <p class="login-link">
+            لديك حساب بالفعل؟ <a href="login.html">تسجيل الدخول</a>
+        </p>
+    </div>
+
+    <script src="signup.js"></script>
+</body>
+</html>

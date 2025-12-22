@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم الموظف</title>
+    <link rel="stylesheet" href="employee-dashboard.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <div class="toggle-btn moved" id="toggle-btn">
+        <i class="fas fa-bars"></i>
+    </div>
+
+    <nav class="sidebar closed" id="sidebar">
+        <div class="sidebar-header">
+            <h3>لوحة الموظف</h3>
+        </div>
+        <ul>
+            <li><a href="#" id="profileBtn"><i class="fas fa-user"></i> ملفي الشخصي</a></li>
+            
+            <li class="dropdown">
+                <a href="#" id="contact-toggle"><i class="fas fa-phone"></i> تواصل معنا <i class="fas fa-caret-down arrow"></i></a>
+                <ul class="dropdown-menu" id="contact-menu">
+                    <li><a href="tel:+962798621884"><i class="fas fa-phone-alt"></i> +962 798 621 884</a></li>
+                    <li><a href="mailto:saddamalomari99@gmail.com"><i class="fas fa-envelope"></i> الدعم الفني</a></li>
+                    <li><a href="#"><i class="fas fa-robot"></i> شات بوت</a></li>
+                </ul>
+            </li>
+
+            <li><a href="#" id="changePassBtn"><i class="fas fa-key"></i> تغيير كلمة المرور</a></li>
+            <li><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a></li>
+        </ul>
+    </nav>
+
+    <main class="main-content expanded" id="main-content">
+        <header class="header">
+            <h1>إدارة الشكاوى الواردة</h1>
+        </header>
+
+        <section class="filter-section card">
+            <div class="filter-controls">
+                <select id="status-filter" class="form-control">
+                    <option value="all">كل الحالات</option>
+                    <option value="new">جديدة</option>
+                    <option value="in_progress">قيد المعالجة</option>
+                    <option value="completed">تمت المعالجة</option>
+                    <option value="refused">مرفوضة</option>
+                </select>
+                <input type="text" id="complaint-search" placeholder="بحث..." class="form-control">
+            </div>
+        </section>
+
+        <section class="complaints-list-section card">
+            <div class="table-responsive">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>الرقم المرجعي</th>
+                            <th>تاريخ الإرسال</th>
+                            <th>نوع الشكوى</th>
+                            <th>الموقع</th>
+                            <th>الحالة</th>
+                            <th>الإجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody id="complaints-table-body">
+                        <tr class="loading-row"><td colspan="6">جاري التحميل...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <p id="no-complaints-message" style="display: none; text-align: center; padding: 20px;">لا توجد شكاوى.</p>
+        </section>
+    </main>
+
+    <div id="details-modal" class="modal">
+        <div class="modal-content">
+            <span class="close close-modal">&times;</span>
+            <h2>تفاصيل الشكوى <span id="detail-ref-number"></span></h2>
+            <form>
+                <div class="form-group-grid">
+                    <div class="form-group"><label>الاسم:</label><input type="text" id="detail-full_name" readonly></div>
+                    <div class="form-group"><label>الهاتف:</label><input type="text" id="detail-phone" readonly></div>
+                </div>
+                <div class="form-group-grid">
+                    <div class="form-group"><label>النوع:</label><input type="text" id="detail-complaint_type" readonly></div>
+                    <div class="form-group"><label>الموقع:</label><input type="text" id="detail-location" readonly></div>
+                </div>
+                <div class="form-group"><label>التاريخ:</label><input type="text" id="detail-date-submitted" readonly></div>
+                <div class="form-group"><label>الوصف:</label><textarea id="detail-description" rows="3" readonly></textarea></div>
+                <div class="form-group attachments">
+                     <a href="#" id="detail-photo-link" target="_blank" class="attachment-link"><i class="fas fa-image"></i> صورة</a>
+                     <a href="#" id="detail-video-link" target="_blank" class="attachment-link"><i class="fas fa-video"></i> فيديو</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="profileModal" class="modal">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <span class="close">&times;</span>
+            <h2>الملف الشخصي</h2>
+            <div id="profileData" style="margin-top: 20px; font-size: 1.1em;"></div>
+        </div>
+    </div>
+
+    <div id="changePassModal" class="modal">
+        <div class="modal-content" style="max-width: 400px;">
+            <span class="close">&times;</span>
+            <h2>تغيير كلمة المرور</h2>
+            <form id="changePassForm" style="display: flex; flex-direction: column; gap: 15px; margin-top: 15px;">
+                <input type="password" id="oldPass" placeholder="كلمة المرور الحالية" required class="form-control">
+                <input type="password" id="newPass" placeholder="كلمة المرور الجديدة" required class="form-control">
+                <button type="submit" style="background: #27ae60; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer;">حفظ</button>
+            </form>
+        </div>
+    </div>
+
+    <script src="employee-dashboard.js"></script>
+</body>
+</html>

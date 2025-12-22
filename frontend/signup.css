@@ -1,0 +1,186 @@
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    background-image: url('4967041-861276742.jpg'); 
+    background-size: cover;
+    background-position: center;
+    background-color: #162447; 
+    direction: rtl; 
+    text-align: right;
+}
+
+.container {
+    background: #ffffff;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.4);
+    width: 100%;
+    max-width: 420px;
+    transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.container:hover {
+    transform: scale(1.01);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5); 
+}
+
+.container h2 {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #1f4068;
+    font-size: 30px;
+    font-weight: 600;
+    position: relative;
+}
+
+.container h2::after {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 4px;
+    background-color: #ff652f;
+    margin: 10px auto 0;
+    border-radius: 2px;
+}
+
+.login-link {
+    text-align: center;
+    margin-top: 25px;
+    color: #666;
+    font-size: 15px;
+}
+
+.login-link a {
+    color: #ff652f;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+.login-link a:hover {
+    color: #d14713;
+    text-decoration: underline;
+}
+
+.role-selection {
+    margin-bottom: 25px;
+    padding: 10px 0;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.role-selection label {
+    display: block;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 10px;
+}
+
+.radio-group {
+    display: flex;
+    justify-content: space-around;
+}
+
+.radio-group input[type="radio"] {
+    display: none;
+}
+
+.radio-group label {
+    cursor: pointer;
+    padding: 8px 20px;
+    border: 2px solid #e0e0e0;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    flex-grow: 1;
+    text-align: center;
+    margin: 0 5px;
+    color: #666;
+}
+
+.radio-group input[type="radio"]:checked + label {
+    background-color: #ff652f;
+    color: white;
+    border-color: #ff652f;
+    box-shadow: 0 4px 10px rgba(255, 101, 47, 0.4);
+}
+
+.form-group {
+    margin-bottom: 22px;
+}
+
+.container input[type="text"],
+.container input[type="email"],
+.container input[type="password"],
+.container select,
+.container input[type="number"]
+ {
+    width: 100%;
+    padding: 14px 18px;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    box-sizing: border-box;
+    font-size: 16px;
+    transition: border-color 0.3s, box-shadow 0.3s;
+    background-color: #f9f9f9;
+}
+
+.container input:focus,
+.container select:focus,
+.container input[type="number"]:focus {
+    border-color: #ff652f;
+    box-shadow: 0 0 10px rgba(255, 101, 47, 0.5); 
+    background-color: #fff;
+    outline: none;
+}
+
+.container select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23ff652f%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13.6-6.4H19.5c-5.8%200-11.2%203.2-13.6%208.8-2.4%205.6-1.6%2012%202.4%2016.8l128%20160c4.8%206.4%2014.4%206.4%2019.2%200l128-160c4-4.8%204.8-11.2%202.4-16.8z%22%2F%3E%3C%2Fsvg%3E');
+    background-repeat: no-repeat;
+    background-position: left 1rem center;
+    background-size: 0.6em;
+}
+
+.container input[type="number"] {
+    direction: ltr;
+    text-align: left;
+}
+
+#employee-fields, #citizen-fields {
+    display: none;
+}
+
+.visible {
+    display: block !important;
+}
+
+.container button[type="submit"] {
+    width: 100%;
+    padding: 14px;
+    background-color: #ff652f;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 19px;
+    font-weight: 700;
+    transition: background-color 0.3s ease, transform 0.1s, box-shadow 0.3s;
+    letter-spacing: 1px;
+    margin-top: 10px;
+}
+
+.container button[type="submit"]:hover {
+    background-color: #d14713; 
+    transform: translateY(-3px); 
+    box-shadow: 0 8px 20px rgba(255, 101, 47, 0.6);
+}
+
+.container button[type="submit"]:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 10px rgba(255, 101, 47, 0.4);
+}
