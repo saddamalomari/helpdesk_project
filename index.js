@@ -574,5 +574,16 @@ app.get('/api/admin/stats', authenticateToken, checkAdminRole, async (req, res) 
         res.status(500).json({ message: "فشل في جلب الإحصائيات" });
     }
 });
+// ✅ جلب كافة الشكاوى (خاص بصفحة المدير)
+app.get('/api/admin/complaints', authenticateToken, checkAdminRole, async (req, res) => {
+    try {
+        // جلب جميع الشكاوى من الجدول وترتيبها من الأحدث للأقدم
+        const [rows] = await db.execute('SELECT * FROM complaints ORDER BY date_submitted DESC');
+        res.json(rows);
+    } catch (err) {
+        console.error('❌ Error fetching all complaints for admin:', err);
+        res.status(500).json({ message: 'فشل في جلب قائمة الشكاوى للمدير' });
+    }
+});
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT}`));
