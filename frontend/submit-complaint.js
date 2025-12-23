@@ -58,10 +58,8 @@ const provinceCodes = {
 };
 
 document.addEventListener('DOMContentLoaded', function() {
-    // ✅ استخدام رابط نسبي ليعمل على سيرفر Render تلقائياً
     const API_BASE_URL = ''; 
     
-    // 1. التحقق من التوكن لضمان صلاحية الجلسة
     const token = localStorage.getItem('token') || 
                   localStorage.getItem('authToken') || 
                   localStorage.getItem('userToken');
@@ -81,7 +79,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const fullNameInput = document.getElementById('full_name');
     const phoneInput = document.getElementById('phone');
 
-    // دالة تعبئة المناطق بناءً على المحافظة
     function populateAreas() {
         const selectedProvince = provinceSelect.value;
         areaSelect.innerHTML = '<option value="">اختر المنطقة</option>';
@@ -96,7 +93,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // 2. تعبئة بيانات المستخدم تلقائياً من السيرفر
     async function fetchUserData() {
         try {
             const response = await fetch(`/api/profile`, {
@@ -131,7 +127,6 @@ document.addEventListener('DOMContentLoaded', function() {
     fetchUserData();
     provinceSelect.addEventListener('change', populateAreas);
 
-    // 3. معالجة إرسال الشكوى
     complaintForm.addEventListener('submit', async function(e) {
         e.preventDefault();
         
@@ -147,7 +142,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const submitBtn = complaintForm.querySelector('button[type="submit"]');
         const originalText = submitBtn.innerHTML;
         submitBtn.disabled = true;
-        submitBtn.innerHTML = 'جاري الإرسال...';
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الإرسال...';
 
         try {
             const response = await fetch(`/api/complaints`, {
@@ -159,7 +154,6 @@ document.addEventListener('DOMContentLoaded', function() {
             const data = await response.json();
             
             if (response.ok) {
-                // توليد الرقم المرجعي الذكي
                 const provinceCode = provinceCodes[selectedProvince];
                 const areaList = areasData[selectedProvince];
                 const areaIndex = areaList.indexOf(selectedArea);
@@ -168,8 +162,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 const referenceNumber = `TIC_${provinceCode}_${areaCode}_${data.id}`;
 
                 refNumberSpan.textContent = referenceNumber;
+                
+                // إظهار رسالة النجاح وإخفاء الفورم بسلاسة
+                complaintForm.style.display = 'none';
                 successBox.style.display = 'block'; 
-                complaintForm.style.display = 'none'; 
+                window.scrollTo(0, 0); // العودة لأعلى الصفحة لرؤية الرسالة
             } else {
                 alert(`فشل الإرسال: ${data.message || 'حدث خطأ غير معروف.'}`);
             }
@@ -182,10 +179,19 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // دالة نسخ الرقم المرجعي
+    // تحسين دالة النسخ لتعطي رد فعل بصري
     copyBtn.addEventListener('click', () => {
         navigator.clipboard.writeText(refNumberSpan.textContent)
-            .then(() => alert('✅ تم نسخ الرقم المرجعي بنجاح!'))
+            .then(() => {
+                const originalBtnText = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<i class="fas fa-check"></i> تم!';
+                copyBtn.style.backgroundColor = '#2ecc71';
+                
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalBtnText;
+                    copyBtn.style.backgroundColor = ''; // العودة للون الأصلي من CSS
+                }, 2000);
+            })
             .catch(() => alert('فشل النسخ، يرجى النسخ يدوياً.'));
     });
 });

@@ -1,3 +1,6 @@
+/* =========================================
+   1. المتغيرات وإعدادات الصفحة الأساسية
+   ========================================= */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     margin: 0;
@@ -33,6 +36,9 @@ body {
     text-align: center;
 }
 
+/* =========================================
+   2. تنسيق النموذج (Form) المدخلات
+   ========================================= */
 #complaint-form label {
     display: block;
     font-weight: 600;
@@ -74,6 +80,9 @@ textarea:focus {
     outline: none;
 }
 
+/* =========================================
+   3. المرفقات وزر الإرسال
+   ========================================= */
 .attachment-group {
     margin-top: 25px;
     padding: 15px;
@@ -120,10 +129,9 @@ textarea:focus {
     transform: translateY(-2px);
 }
 
-#complaint-form button[type="submit"] i {
-    margin-left: 5px;
-}
-
+/* =========================================
+   4. شاشة النجاح والنتيجة
+   ========================================= */
 .success-box {
     margin-top: 20px;
     padding: 25px;
@@ -170,10 +178,40 @@ textarea:focus {
     background-color: #162447;
 }
 
-.copy-btn i {
-    margin-left: 5px;
+/* ✅ التعديل الجديد: تنسيق زر العودة للرئيسية */
+.success-actions {
+    margin-top: 30px;
+    display: flex;
+    justify-content: center;
 }
 
+.home-btn {
+    background-color: #1f4068; /* الأزرق الداكن ليتناسب مع الهوية */
+    color: white;
+    text-decoration: none;
+    padding: 12px 25px;
+    border-radius: 10px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 10px rgba(31, 64, 104, 0.2);
+}
+
+.home-btn:hover {
+    background-color: #ff652f; /* يتحول للبرتقالي عند المرور */
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(255, 101, 47, 0.3);
+}
+
+.home-btn i {
+    font-size: 1.1rem;
+}
+
+/* =========================================
+   5. الاستجابة للهواتف (Responsive)
+   ========================================= */
 @media (max-width: 600px) {
     .complaint-container {
         padding: 25px 20px;
@@ -185,5 +223,10 @@ textarea:focus {
 
     .copy-btn {
         padding: 10px;
+    }
+
+    .home-btn {
+        width: 100%; /* يأخذ كامل العرض في الموبايل */
+        justify-content: center;
     }
 }

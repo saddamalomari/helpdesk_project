@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', async function() {
 
                 const tbody = document.getElementById('recent-complaints-body');
                 if (tbody) {
-                    tbody.innerHTML = complaints.length ? '' : '<tr><td colspan="4">لا توجد شكاوى.</td></tr>';
+                    tbody.innerHTML = complaints.length ? '' : '<tr><td colspan="5">لا توجد شكاوى.</td></tr>';
                     complaints.slice(0, 5).forEach(c => {
                         const date = new Date(c.date_submitted).toLocaleDateString('ar-EG');
                         tbody.innerHTML += `
@@ -173,6 +173,11 @@ document.addEventListener('DOMContentLoaded', async function() {
                                 <td>${c.complaint_type}</td>
                                 <td>${date}</td>
                                 <td><span class="status-badge status-${c.status}">${c.status}</span></td>
+                                <td style="text-align: left;">
+                                    <a href="view-complaint.html?id=${c.id}" class="view-btn">
+                                        <i class="fas fa-eye"></i> عرض
+                                    </a>
+                                </td>
                             </tr>`;
                     });
                 }

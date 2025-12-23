@@ -19,34 +19,32 @@
         <ul>
             <li><a href="#" class="active"><i class="fas fa-home"></i> الرئيسية</a></li>
             <li><a href="profile.html"><i class="fas fa-user"></i> ملفي الشخصي</a></li>
-<li class="dropdown">
-    <a href="#" id="contact-toggle">
-        <i class="fas fa-phone"></i> تواصل معنا 
-        <i class="fas fa-caret-down arrow" style="float:left; margin-top:5px;"></i>
-    </a>
-    <ul class="dropdown-menu" id="contact-menu">
-        
-        <li>
-            <a href="tel:+962798621884" style="font-size: 0.9rem;">
-                <i class="fas fa-phone-alt" style="color: #2ecc71;"></i> 
-                0798621884
-            </a>
-        </li>
-
-        <li>
-            <a href="mailto:saddamalomari99@gmail.com" style="font-size: 0.9rem;">
-                <i class="fas fa-envelope" style="color: #f39c12;"></i> 
-                الدعم الفني
-            </a>
-        </li>
-
-        <li>
-            <a href="#" id="chatbot-btn" style="font-size: 0.9rem;">
-                <i class="fas fa-robot" style="color: #3498db;"></i> 
-                المساعد الذكي (Chatbot)
-            </a>
-        </li>
-    </ul>
+            <li class="dropdown">
+                <a href="#" id="contact-toggle">
+                    <i class="fas fa-phone"></i> تواصل معنا 
+                    <i class="fas fa-caret-down arrow" style="float:left; margin-top:5px;"></i>
+                </a>
+                <ul class="dropdown-menu" id="contact-menu">
+                    <li>
+                        <a href="tel:+962798621884" style="font-size: 0.9rem;">
+                            <i class="fas fa-phone-alt" style="color: #2ecc71;"></i> 
+                            0798621884
+                        </a>
+                    </li>
+                    <li>
+                        <a href="mailto:saddamalomari99@gmail.com" style="font-size: 0.9rem;">
+                            <i class="fas fa-envelope" style="color: #f39c12;"></i> 
+                            الدعم الفني
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" id="chatbot-btn" style="font-size: 0.9rem;">
+                            <i class="fas fa-robot" style="color: #3498db;"></i> 
+                            المساعد الذكي (Chatbot)
+                        </a>
+                    </li>
+                </ul>
+            </li>
             <li><a href="#" id="change-password-toggle"><i class="fas fa-key"></i> تغيير كلمة المرور</a></li>
             <li><a href="login.html" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a></li>
         </ul>
@@ -123,11 +121,11 @@
                                         <th>نوع الشكوى</th>
                                         <th>التاريخ</th>
                                         <th>الحالة</th>
-                                    </tr>
+                                        <th>إجراءات</th> </tr>
                                 </thead>
                                 <tbody id="recent-complaints-body">
                                     <tr>
-                                        <td colspan="4" style="text-align:center;">جاري تحميل البيانات...</td>
+                                        <td colspan="5" style="text-align:center;">جاري تحميل البيانات...</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -152,41 +150,43 @@
             </div>
         </div>
     </main>
+
     <div id="change-password-modal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <span class="close-btn" id="close-pass-modal">&times;</span>
-        <h3>🔐 تغيير كلمة المرور</h3>
-        <form id="change-password-form">
-            <div class="input-group">
-                <label>كلمة المرور الحالية:</label>
-                <input type="password" id="old-password" required placeholder="********">
-            </div>
-            <div class="input-group">
-                <label>كلمة المرور الجديدة:</label>
-                <input type="password" id="new-password" required placeholder="********">
-            </div>
-            <button type="submit" class="action-card primary" style="width: 100%; justify-content: center; border: none; cursor: pointer; margin-top: 10px;">
-                حفظ التغييرات
-            </button>
-        </form>
+        <div class="modal-content">
+            <span class="close-btn" id="close-pass-modal">&times;</span>
+            <h3>🔐 تغيير كلمة المرور</h3>
+            <form id="change-password-form">
+                <div class="input-group">
+                    <label>كلمة المرور الحالية:</label>
+                    <input type="password" id="old-password" required placeholder="********">
+                </div>
+                <div class="input-group">
+                    <label>كلمة المرور الجديدة:</label>
+                    <input type="password" id="new-password" required placeholder="********">
+                </div>
+                <button type="submit" class="action-card primary" style="width: 100%; justify-content: center; border: none; cursor: pointer; margin-top: 10px;">
+                    حفظ التغييرات
+                </button>
+            </form>
+        </div>
     </div>
-</div>
 
     <script src="citizen-dashboard.js"></script> 
+
     <div id="chatbot-window" class="chatbot-window">
-    <div class="chat-header">
-        <span><i class="fas fa-robot"></i> المساعد الذكي</span>
-        <span class="close-chat" id="close-chat">&times;</span>
+        <div class="chat-header">
+            <span><i class="fas fa-robot"></i> المساعد الذكي</span>
+            <span class="close-chat" id="close-chat">&times;</span>
+        </div>
+        <div class="chat-body">
+            <div class="message bot">
+                <p>مرحباً بك! 👋 أنا المساعد الذكي، كيف يمكنني مساعدتك اليوم؟</p>
+            </div>
+        </div>
+        <div class="chat-footer">
+            <input type="text" id="chat-input" placeholder="اكتب رسالتك هنا...">
+            <button id="chat-send-btn"><i class="fas fa-paper-plane"></i></button>
+        </div>
     </div>
-    <div class="chat-body">
-        <div class="message bot">
-            <p>مرحباً بك! 👋 أنا المساعد الذكي، كيف يمكنني مساعدتك اليوم في تقديم شكوى؟</p>
-        </div>
-        </div>
-    <div class="chat-footer">
-    <input type="text" id="chat-input" placeholder="اكتب رسالتك هنا...">
-    <button id="chat-send-btn"><i class="fas fa-paper-plane"></i></button>
-</div>
-</div>
 </body>
 </html>

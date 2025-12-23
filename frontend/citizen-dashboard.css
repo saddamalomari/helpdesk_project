@@ -57,7 +57,6 @@ body {
 .sidebar ul li a:hover, .sidebar ul li a.active { background: var(--primary-color); }
 .sidebar ul li a i { margin-left: 10px; width: 25px; text-align: center; }
 
-/* ✅ تعديل القائمة المنسدلة (dropdown) لتعمل مع الـ JS */
 .dropdown-menu { 
     display: none; 
     background: #34495e; 
@@ -76,7 +75,7 @@ body {
 }
 
 .dropdown-menu li a {
-    padding: 12px 40px !important; /* إزاحة لليمين لتبدو كقائمة فرعية */
+    padding: 12px 40px !important;
     font-size: 0.85rem;
     background: rgba(0,0,0,0.1);
 }
@@ -219,6 +218,38 @@ header h1 { margin: 0; color: var(--secondary-color); font-size: 1.5rem; }
 .status-progress { background: #fff3e0; color: #e67e22; }
 .status-completed { background: #e8f5e9; color: #2ecc71; }
 
+/* ✅ تعديل جديد: تنسيق زر عرض الشكوى الاحترافي */
+.view-btn {
+    background-color: #f8f9fa;
+    color: var(--secondary-color);
+    padding: 6px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 1px solid #dee2e6;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.view-btn:hover {
+    background-color: var(--secondary-color);
+    color: white;
+    border-color: var(--secondary-color);
+    transform: translateY(-1px);
+}
+
+.view-btn i {
+    font-size: 0.9rem;
+    color: var(--primary-color); /* أيقونة زرقاء */
+}
+
+.view-btn:hover i {
+    color: white;
+}
+
 /* =========================================
    7. القائمة الجانبية اليسرى (الإشعارات)
    ========================================= */
@@ -236,6 +267,16 @@ header h1 { margin: 0; color: var(--secondary-color); font-size: 1.5rem; }
     .sidebar.active { right: 0; }
     .sidebar.active ~ .main-content { margin-right: 0; }
     .sidebar.active ~ .toggle-btn { right: 20px; background-color: var(--danger-color); }
+    
+    /* جعل الجدول أكثر مرونة في الموبايل بعد إضافة الزر */
+    .styled-table th, .styled-table td {
+        padding: 8px 5px;
+        font-size: 0.8rem;
+    }
+    .view-btn {
+        padding: 4px 8px;
+        font-size: 0.75rem;
+    }
 }
 
 /* =========================================
@@ -250,7 +291,7 @@ header h1 { margin: 0; color: var(--secondary-color); font-size: 1.5rem; }
     background: white;
     border-radius: 15px;
     box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-    display: none; /* يتم التحكم بها عبر JS */
+    display: none;
     flex-direction: column;
     z-index: 2000;
     overflow: hidden;
@@ -326,7 +367,7 @@ header h1 { margin: 0; color: var(--secondary-color); font-size: 1.5rem; }
    10. نافذة تغيير كلمة المرور (Modal)
    ========================================= */
 #change-password-modal.modal {
-    display: none; /* يتم التحكم بها عبر JS */
+    display: none;
     position: fixed;
     top: 0;
     left: 0;
