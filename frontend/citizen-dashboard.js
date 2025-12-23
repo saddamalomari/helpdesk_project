@@ -10,7 +10,6 @@ document.addEventListener('DOMContentLoaded', async function() {
 
     if (!token) {
         console.warn("لم يتم العثور على توكن، قد تحتاج لتسجيل الدخول.");
-        // window.location.href = 'login.html'; // فعل هذا السطر لاحقاً لتأمين الصفحة
     }
 
     // عرض التاريخ الحالي
@@ -20,48 +19,61 @@ document.addEventListener('DOMContentLoaded', async function() {
         dateBox.textContent = new Date().toLocaleDateString('ar-EG', dateOptions);
     }
 
-    // --- التحكم في القوائم الجانبية ---
+    // --- 1. التحكم في القائمة الجانبية (Sidebar) ---
     const sidebar = document.getElementById('sidebar');
     const toggleBtn = document.getElementById('toggle-btn');
     if(toggleBtn && sidebar) {
         toggleBtn.addEventListener('click', () => sidebar.classList.toggle('active'));
     }
 
-    // --- برمجة خاصية "تغيير كلمة المرور" ---
-    const changePassForm = document.getElementById('change-password-form');
-    if (changePassForm) {
-        changePassForm.addEventListener('submit', async (e) => {
+    // --- 2. حل مشكلة قائمة "تواصل معنا" ---
+    const contactToggle = document.getElementById('contact-toggle');
+    const contactMenu = document.getElementById('contact-menu');
+    if (contactToggle && contactMenu) {
+        contactToggle.addEventListener('click', function(e) {
             e.preventDefault();
-            const old_password = document.getElementById('old-password').value;
-            const new_password = document.getElementById('new-password').value;
-
-            try {
-                // ✅ التعديل الثاني: استخدام المسار النسبي /api/change-password
-                const response = await fetch(`/api/change-password`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ old_password, new_password })
-                });
-
-                const result = await response.json();
-                if (response.ok) {
-                    alert('✅ تم تغيير كلمة المرور بنجاح!');
-                    document.getElementById('change-password-modal').style.display = 'none';
-                    changePassForm.reset();
-                } else {
-                    alert('❌ خطأ: ' + result.message);
-                }
-            } catch (error) {
-                console.error("Password Change Error:", error);
-                alert('حدث خطأ أثناء الاتصال بالسيرفر');
-            }
+            contactMenu.classList.toggle('active'); // CSS الخاص بك يستخدم كلاس active لإظهارها
         });
     }
 
-    // --- نظام الشات بوت الذكي ---
+    // --- 3. التحكم في نافذة "تغيير كلمة المرور" (فتح وإغلاق) ---
+    const changePassToggle = document.getElementById('change-password-toggle');
+    const changePassModal = document.getElementById('change-password-modal');
+    const closePassModal = document.getElementById('close-pass-modal');
+
+    if (changePassToggle && changePassModal) {
+        changePassToggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            changePassModal.style.display = 'flex'; // إظهار النافذة
+        });
+    }
+
+    if (closePassModal) {
+        closePassModal.addEventListener('click', () => {
+            changePassModal.style.display = 'none'; // إغلاق النافذة
+        });
+    }
+
+    // --- 4. التحكم في نافذة "الشات بوت" (فتح وإغلاق) ---
+    const chatbotBtn = document.getElementById('chatbot-btn');
+    const chatbotWindow = document.getElementById('chatbot-window');
+    const closeChat = document.getElementById('close-chat');
+
+    if (chatbotBtn && chatbotWindow) {
+        chatbotBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            chatbotWindow.style.display = 'flex'; // فتح نافذة الشات
+            if (contactMenu) contactMenu.classList.remove('active'); // إغلاق القائمة بعد الضغط
+        });
+    }
+
+    if (closeChat) {
+        closeChat.addEventListener('click', () => {
+            chatbotWindow.style.display = 'none'; // إغلاق نافذة الشات
+        });
+    }
+
+    // --- 5. نظام الشات بوت الذكي (محدث بالإجابة الخاصة) ---
     const chatInput = document.getElementById('chat-input');
     const sendBtn = document.getElementById('chat-send-btn');
     const chatBody = document.querySelector('.chat-body');
@@ -80,15 +92,55 @@ document.addEventListener('DOMContentLoaded', async function() {
             if (text) {
                 appendMessage(text, 'user');
                 chatInput.value = '';
-                setTimeout(() => appendMessage("أهلاً بك! 😊 كيف أساعدك اليوم؟", 'bot'), 600);
+                
+                let botResponse = "أهلاً بك! 😊 كيف أساعدك اليوم في تقديم شكوى؟";
+                
+                // إضافة الرد المخصص بناءً على طلبك
+                if (text.includes("حسام الرفايعة")) {
+                    botResponse = "شخص يأكله بالمتر.";
+                }
+
+                setTimeout(() => appendMessage(botResponse, 'bot'), 600);
             }
         });
     }
 
-    // --- جلب بيانات الداشبورد (الشكاوى والملف الشخصي) ---
+    // --- 6. معالجة نموذج "تغيير كلمة المرور" ---
+    const changePassForm = document.getElementById('change-password-form');
+    if (changePassForm) {
+        changePassForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const old_password = document.getElementById('old-password').value;
+            const new_password = document.getElementById('new-password').value;
+
+            try {
+                const response = await fetch(`/api/change-password`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ old_password, new_password })
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    alert('✅ تم تغيير كلمة المرور بنجاح!');
+                    changePassModal.style.display = 'none';
+                    changePassForm.reset();
+                } else {
+                    alert('❌ خطأ: ' + result.message);
+                }
+            } catch (error) {
+                console.error("Password Change Error:", error);
+                alert('حدث خطأ أثناء الاتصال بالسيرفر');
+            }
+        });
+    }
+
+    // --- 7. جلب بيانات الداشبورد (الشكاوى والملف الشخصي) ---
     if (token) {
         try {
-            // ✅ التعديل الثالث: استخدام المسار النسبي /api/profile
             const profileRes = await fetch(`/api/profile`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -100,7 +152,6 @@ document.addEventListener('DOMContentLoaded', async function() {
                 }
             }
 
-            // ✅ التعديل الرابع: استخدام المسار النسبي /api/my-complaints
             const complaintsRes = await fetch(`/api/my-complaints`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
