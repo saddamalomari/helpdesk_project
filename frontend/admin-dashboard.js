@@ -1,16 +1,34 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // ✅ تم إزالة localhost واستخدام مسارات نسبية لضمان العمل على Render
-    
-    // ✅ التحقق من التوكن بكل الأسماء المحتملة لضمان صلاحية الدخول
+    // ✅ التحقق من التوكن
     const token = localStorage.getItem('token') || 
                   localStorage.getItem('userToken') || 
                   localStorage.getItem('authToken');
 
-    // 1. التحقق من الصلاحيات والتحويل لصفحة الدخول إذا لم يوجد توكن
     if (!token) {
         console.error("لم يتم العثور على توكن، يتم التحويل لصفحة الدخول...");
         window.location.href = 'login.html';
         return;
+    }
+
+    // =================================================
+    // ✅ التعديل الجديد: تفعيل بطاقة "الشكاوى النشطة" كزر
+    // =================================================
+    const activeComplaintsCard = document.getElementById('active-complaints')?.closest('.stat-card');
+    
+    if (activeComplaintsCard) {
+        activeComplaintsCard.style.cursor = 'pointer'; // تغيير شكل الماوس ليد
+        activeComplaintsCard.addEventListener('click', () => {
+            window.location.href = 'all-complaints.html'; // التوجه لصفحة الشكاوى
+        });
+        
+        // إضافة تأثير بصري بسيط عند المرور بالماوس
+        activeComplaintsCard.addEventListener('mouseenter', () => {
+            activeComplaintsCard.style.transform = 'translateY(-5px)';
+            activeComplaintsCard.style.transition = '0.3s';
+        });
+        activeComplaintsCard.addEventListener('mouseleave', () => {
+            activeComplaintsCard.style.transform = 'translateY(0)';
+        });
     }
 
     // =================================================
@@ -25,7 +43,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 const stats = await response.json();
                 
-                // تحديث الأرقام في الواجهة
                 if (document.getElementById('total-employees')) 
                     document.getElementById('total-employees').textContent = stats.employees || 0;
                 
@@ -41,17 +58,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =================================================
-    // دالة: جلب وعرض قائمة الموظفين (مع منع الكاش)
+    // دالة: جلب وعرض قائمة الموظفين
     // =================================================
     async function fetchEmployees() {
         try {
-            // إضافة t= لضمان جلب أحدث البيانات من السيرفر في العقبة
             const response = await fetch(`/api/employees?t=${new Date().getTime()}`, {
                 headers: { 
                     'Authorization': `Bearer ${token}`,
-                    'Cache-Control': 'no-cache, no-store, must-revalidate',
-                    'Pragma': 'no-cache',
-                    'Expires': '0'
+                    'Cache-Control': 'no-cache'
                 }
             });
             
@@ -65,7 +79,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             employees.forEach(emp => {
-                // منع عرض حسابات المديرين في قائمة الموظفين
                 if(emp.role === 'Admin' || emp.role === 'admin') return;
 
                 const row = document.createElement('tr');
@@ -89,7 +102,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             attachEventListeners();
-
         } catch (error) {
             console.error('Error fetching employees:', error);
         }
@@ -102,13 +114,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (addForm) {
         addForm.addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            const name = document.getElementById('employee-name').value;
-            const department = document.getElementById('department').value;
-            const id = document.getElementById('employee-id').value;
-            const email = document.getElementById('employee-email').value;
-            const phone = document.getElementById('phone').value;
-            const password = document.getElementById('employee-password').value;
+            const payload = {
+                name: document.getElementById('employee-name').value,
+                department: document.getElementById('department').value,
+                id: document.getElementById('employee-id').value,
+                email: document.getElementById('employee-email').value,
+                phone: document.getElementById('phone').value,
+                password: document.getElementById('employee-password').value
+            };
 
             try {
                 const response = await fetch(`/api/employees`, {
@@ -117,10 +130,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({ name, id, department, email, phone, password })
+                    body: JSON.stringify(payload)
                 });
-
-                const result = await response.json();
 
                 if (response.ok) {
                     alert('✅ تم إضافة الموظف بنجاح!');
@@ -128,10 +139,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     fetchEmployees(); 
                     loadAdminStats(); 
                 } else {
+                    const result = await response.json();
                     alert('❌ خطأ: ' + result.message);
                 }
             } catch (error) {
-                console.error(error);
                 alert('حدث خطأ في الاتصال بالسيرفر');
             }
         });
@@ -141,128 +152,86 @@ document.addEventListener('DOMContentLoaded', () => {
     // دالة: ربط أزرار الحذف والتعديل
     // =================================================
     function attachEventListeners() {
-        // زر الحذف
         document.querySelectorAll('.delete-btn').forEach(btn => {
-            btn.addEventListener('click', async function() {
+            btn.onclick = async function() {
                 const id = this.getAttribute('data-id');
-                if(confirm('هل أنت متأكد من حذف هذا الموظف؟ لا يمكن التراجع عن هذا الإجراء.')) {
-                    try {
-                        const res = await fetch(`/api/employees/${id}`, {
-                            method: 'DELETE',
-                            headers: { 'Authorization': `Bearer ${token}` }
-                        });
-                        
-                        if(res.ok) {
-                            alert('تم الحذف بنجاح');
-                            fetchEmployees(); 
-                            loadAdminStats(); 
-                        } else {
-                            alert('فشل الحذف');
-                        }
-                    } catch (err) {
-                        console.error(err);
-                    }
-                }
-            });
-        });
-
-        // زر التعديل (يفتح المودال)
-        document.querySelectorAll('.edit-btn').forEach(btn => {
-            btn.addEventListener('click', async function() {
-                const id = this.getAttribute('data-id');
-                try {
+                if(confirm('هل أنت متأكد من الحذف؟')) {
                     const res = await fetch(`/api/employees/${id}`, {
+                        method: 'DELETE',
                         headers: { 'Authorization': `Bearer ${token}` }
                     });
-                    const data = await res.json();
-                    
                     if(res.ok) {
-                        document.getElementById('edit-employee-db-id').value = data.id;
-                        document.getElementById('edit-employee-name').value = data.name;
-                        document.getElementById('edit-employee-id').value = data.code || '';
-                        document.getElementById('edit-department').value = data.department || '';
-                        document.getElementById('edit-employee-email').value = data.email;
-                        document.getElementById('edit-phone').value = data.phone || '';
-                        
-                        const editModal = document.getElementById('edit-employee-modal');
-                        if (editModal) editModal.style.display = 'flex';
+                        fetchEmployees(); 
+                        loadAdminStats(); 
                     }
-                } catch (err) {
-                    console.error("فشل جلب تفاصيل الموظف", err);
                 }
-            });
+            };
+        });
+
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.onclick = async function() {
+                const id = this.getAttribute('data-id');
+                const res = await fetch(`/api/employees/${id}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const data = await res.json();
+                if(res.ok) {
+                    document.getElementById('edit-employee-db-id').value = data.id;
+                    document.getElementById('edit-employee-name').value = data.name;
+                    document.getElementById('edit-employee-id').value = data.code || '';
+                    document.getElementById('edit-department').value = data.department || '';
+                    document.getElementById('edit-employee-email').value = data.email;
+                    document.getElementById('edit-phone').value = data.phone || '';
+                    document.getElementById('edit-employee-modal').style.display = 'flex';
+                }
+            };
         });
     }
 
-    // =================================================
-    // دالة: حفظ التعديلات
-    // =================================================
+    // حفظ التعديلات
     const editForm = document.getElementById('edit-employee-form');
     if(editForm) {
-        editForm.addEventListener('submit', async (e) => {
+        editForm.onsubmit = async (e) => {
             e.preventDefault();
-            
             const dbId = document.getElementById('edit-employee-db-id').value;
-            const name = document.getElementById('edit-employee-name').value;
-            const id = document.getElementById('edit-employee-id').value;
-            const department = document.getElementById('edit-department').value;
-            const email = document.getElementById('edit-employee-email').value;
-            const phone = document.getElementById('edit-phone').value;
-            const password = document.getElementById('edit-password').value;
+            const payload = {
+                name: document.getElementById('edit-employee-name').value,
+                id: document.getElementById('edit-employee-id').value,
+                department: document.getElementById('edit-department').value,
+                email: document.getElementById('edit-employee-email').value,
+                phone: document.getElementById('edit-phone').value,
+                password: document.getElementById('edit-password').value
+            };
 
-            try {
-                const res = await fetch(`/api/employees/${dbId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ name, id, department, email, phone, password })
-                });
+            const res = await fetch(`/api/employees/${dbId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
+            });
 
-                const result = await res.json();
-                if(res.ok) {
-                    alert('✅ تم تحديث البيانات بنجاح');
-                    const editModal = document.getElementById('edit-employee-modal');
-                    if (editModal) editModal.style.display = 'none';
-                    
-                    setTimeout(() => {
-                        fetchEmployees();
-                    }, 500); 
-
-                } else {
-                    alert('خطأ: ' + result.message);
-                }
-            } catch (err) {
-                console.error(err);
-                alert('حدث خطأ أثناء التحديث');
+            if(res.ok) {
+                alert('✅ تم التحديث');
+                document.getElementById('edit-employee-modal').style.display = 'none';
+                fetchEmployees();
             }
-        });
+        };
     }
 
-    // إغلاق المودال
-    const modal = document.getElementById('edit-employee-modal');
-    const closeBtn = document.querySelector('.close-btn');
-    if(closeBtn) {
-        closeBtn.onclick = () => { if (modal) modal.style.display = "none"; }
-    }
-    window.onclick = (event) => {
-        if (event.target == modal) { if (modal) modal.style.display = "none"; }
-    }
+    // إغلاق المودال وتسجيل الخروج
+    document.querySelector('.close-btn').onclick = () => document.getElementById('edit-employee-modal').style.display = "none";
+    
+    document.getElementById('logoutBtn').onclick = (e) => {
+        e.preventDefault();
+        if(confirm('تسجيل خروج؟')) {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }
+    };
 
-    // تسجيل الخروج وتنظيف التخزين المحلي
-    const logoutBtn = document.getElementById('logoutBtn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            if(confirm('هل تريد تسجيل الخروج؟')) {
-                localStorage.clear();
-                window.location.href = 'login.html';
-            }
-        });
-    }
-
-    // استدعاء الدوال عند بدء التشغيل لتحميل البيانات
+    // التشغيل الأولي
     loadAdminStats();
     fetchEmployees();
 });
