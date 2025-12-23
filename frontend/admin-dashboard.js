@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // ✅ التحقق من التوكن
+    // ✅ التحقق من التوكن لضمان صلاحية الجلسة
     const token = localStorage.getItem('token') || 
                   localStorage.getItem('userToken') || 
                   localStorage.getItem('authToken');
@@ -11,23 +11,27 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =================================================
-    // ✅ التعديل الجديد: تفعيل بطاقة "الشكاوى النشطة" كزر
+    // ✅ التعديل الجديد: تفعيل بطاقة "الشكاوى النشطة" كزر للانتقال لصفحة عرض الكل
     // =================================================
     const activeComplaintsCard = document.getElementById('active-complaints')?.closest('.stat-card');
     
     if (activeComplaintsCard) {
-        activeComplaintsCard.style.cursor = 'pointer'; // تغيير شكل الماوس ليد
+        activeComplaintsCard.style.cursor = 'pointer'; // تغيير شكل الماوس ليد عند الوقوف على البطاقة
+        
         activeComplaintsCard.addEventListener('click', () => {
-            window.location.href = 'all-complaints.html'; // التوجه لصفحة الشكاوى
+            window.location.href = 'all-complaints.html'; // التوجه لصفحة جميع الشكاوى
         });
         
-        // إضافة تأثير بصري بسيط عند المرور بالماوس
+        // إضافة تأثير حركي بسيط عند مرور الماوس لزيادة التفاعل
         activeComplaintsCard.addEventListener('mouseenter', () => {
-            activeComplaintsCard.style.transform = 'translateY(-5px)';
-            activeComplaintsCard.style.transition = '0.3s';
+            activeComplaintsCard.style.transform = 'translateY(-8px)';
+            activeComplaintsCard.style.boxShadow = '0 10px 25px rgba(191, 149, 63, 0.3)';
+            activeComplaintsCard.style.transition = 'all 0.3s ease';
         });
+        
         activeComplaintsCard.addEventListener('mouseleave', () => {
             activeComplaintsCard.style.transform = 'translateY(0)';
+            activeComplaintsCard.style.boxShadow = '';
         });
     }
 
@@ -43,6 +47,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (response.ok) {
                 const stats = await response.json();
                 
+                // تحديث الأرقام الحية في الواجهة
                 if (document.getElementById('total-employees')) 
                     document.getElementById('total-employees').textContent = stats.employees || 0;
                 
@@ -58,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =================================================
-    // دالة: جلب وعرض قائمة الموظفين
+    // دالة: جلب وعرض قائمة الموظفين (مع منع الكاش)
     // =================================================
     async function fetchEmployees() {
         try {
@@ -79,6 +84,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             employees.forEach(emp => {
+                // منع عرض حسابات المديرين في قائمة الموظفين العاديين
                 if(emp.role === 'Admin' || emp.role === 'admin') return;
 
                 const row = document.createElement('tr');
@@ -101,7 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (tbody) tbody.appendChild(row);
             });
 
-            attachEventListeners();
+            attachEventListeners(); // ربط أزرار الحذف والتعديل بعد إنشاء الصفوف
         } catch (error) {
             console.error('Error fetching employees:', error);
         }
@@ -152,10 +158,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // دالة: ربط أزرار الحذف والتعديل
     // =================================================
     function attachEventListeners() {
+        // أزرار الحذف
         document.querySelectorAll('.delete-btn').forEach(btn => {
             btn.onclick = async function() {
                 const id = this.getAttribute('data-id');
-                if(confirm('هل أنت متأكد من الحذف؟')) {
+                if(confirm('هل أنت متأكد من حذف هذا الموظف؟')) {
                     const res = await fetch(`/api/employees/${id}`, {
                         method: 'DELETE',
                         headers: { 'Authorization': `Bearer ${token}` }
@@ -168,6 +175,7 @@ document.addEventListener('DOMContentLoaded', () => {
             };
         });
 
+        // أزرار التعديل
         document.querySelectorAll('.edit-btn').forEach(btn => {
             btn.onclick = async function() {
                 const id = this.getAttribute('data-id');
@@ -188,7 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // حفظ التعديلات
+    // حفظ تعديلات الموظف
     const editForm = document.getElementById('edit-employee-form');
     if(editForm) {
         editForm.onsubmit = async (e) => {
@@ -213,25 +221,32 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if(res.ok) {
-                alert('✅ تم التحديث');
+                alert('✅ تم تحديث بيانات الموظف بنجاح');
                 document.getElementById('edit-employee-modal').style.display = 'none';
                 fetchEmployees();
             }
         };
     }
 
-    // إغلاق المودال وتسجيل الخروج
-    document.querySelector('.close-btn').onclick = () => document.getElementById('edit-employee-modal').style.display = "none";
-    
-    document.getElementById('logoutBtn').onclick = (e) => {
-        e.preventDefault();
-        if(confirm('تسجيل خروج؟')) {
-            localStorage.clear();
-            window.location.href = 'login.html';
-        }
-    };
+    // إغلاق نافذة التعديل (Modal)
+    const closeBtn = document.querySelector('.close-btn');
+    if(closeBtn) {
+        closeBtn.onclick = () => document.getElementById('edit-employee-modal').style.display = "none";
+    }
 
-    // التشغيل الأولي
+    // تسجيل الخروج
+    const logoutBtn = document.getElementById('logoutBtn');
+    if (logoutBtn) {
+        logoutBtn.onclick = (e) => {
+            e.preventDefault();
+            if(confirm('هل تريد تسجيل الخروج؟')) {
+                localStorage.clear();
+                window.location.href = 'login.html';
+            }
+        };
+    }
+
+    // استدعاء البيانات عند تحميل الصفحة
     loadAdminStats();
     fetchEmployees();
 });
