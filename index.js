@@ -291,28 +291,10 @@ app.get('/api/my-complaints', authenticateToken, async (req, res) => {
     }
 });
 
-app.get('/api/complaints', authenticateToken, async (req, res) => {
-    const userRole = req.user.role ? req.user.role.toLowerCase() : '';
-
-    if (userRole !== 'employee') { 
-        return res.status(403).json({ message: 'غير مصرح لك بالوصول. يرجى تسجيل الدخول كموظف.' });
-    }
-    
-    try {
-        const [rows] = await db.execute('SELECT * FROM complaints ORDER BY date_submitted DESC'); 
-        res.json(rows);
-    } catch (err) {
-        console.error('❌ Error fetching complaints for employee:', err);
-        res.status(500).json({ message: 'فشل في جلب قائمة الشكاوى' });
-    }
-});
-
+// ✅ المسار المحدث: يسمح للمدير والموظف، والمواطن برؤية شكواه فقط
 app.get('/api/complaints/:id', authenticateToken, async (req, res) => {
     const userRole = req.user.role ? req.user.role.toLowerCase() : '';
-    if (userRole !== 'employee') {
-        return res.status(403).json({ message: 'غير مصرح لك بالوصول.' });
-    }
-
+    const userId = req.user.id;
     const complaintId = req.params.id; 
     
     try {
@@ -321,21 +303,40 @@ app.get('/api/complaints/:id', authenticateToken, async (req, res) => {
         if (rows.length === 0) {
             return res.status(404).json({ message: 'الشكوى المطلوبة غير موجودة.' });
         }
-        
-        res.json(rows[0]);
+
+        const complaint = rows[0];
+
+        // 1. إذا كان مدير أو موظف -> السماح بالوصول الكامل
+        if (userRole === 'admin' || userRole === 'employee') {
+            return res.json(complaint);
+        } 
+        // 2. إذا كان مواطن -> التحقق من مطابقة رقم هاتفه مع الشكوى
+        else if (userRole === 'citizen') {
+            const [userRows] = await db.execute('SELECT phone FROM users WHERE id = ?', [userId]);
+            const userPhone = userRows[0]?.phone;
+
+            if (userPhone && complaint.phone === userPhone) {
+                return res.json(complaint);
+            } else {
+                return res.status(403).json({ message: 'غير مصرح لك بالوصول لشكوى لا تخصك.' });
+            }
+        } else {
+            return res.status(403).json({ message: 'غير مصرح لك بالوصول.' });
+        }
     } catch (err) {
-        console.error('❌ Error fetching single complaint by ID:', err);
+        console.error('❌ Error fetching complaint:', err);
         res.status(500).json({ message: 'فشل في جلب بيانات الشكوى.' });
     }
 });
-
 app.put('/api/complaints/:id/status', authenticateToken, async (req, res) => {
     const complaintId = req.params.id; 
     const { status } = req.body; 
 
     const userRole = req.user.role ? req.user.role.toLowerCase() : '';
-    if (userRole !== 'employee') {
-        return res.status(403).json({ message: 'غير مصرح لك بالوصول.' });
+
+    // ✅ التعديل: السماح للموظف والمدير بتغيير الحالة
+    if (userRole !== 'employee' && userRole !== 'admin') {
+        return res.status(403).json({ message: 'غير مصرح لك بالوصول لهذه العملية.' });
     }
 
     if (!status) return res.status(400).json({ message: "حالة الشكوى مطلوبة." });
@@ -359,7 +360,7 @@ app.put('/api/complaints/:id/status', authenticateToken, async (req, res) => {
 
     } catch (err) {
         console.error('❌ Database Update Error:', err);
-        res.status(500).json({ message: "حدث خطأ داخلي في الخادم أثناء تحديث قاعدة البيانات." });
+        res.status(500).json({ message: "حدث خطأ داخلي في الخادم." });
     }
 });
 
