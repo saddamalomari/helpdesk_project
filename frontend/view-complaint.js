@@ -1,16 +1,30 @@
 document.addEventListener('DOMContentLoaded', async function() {
-    const token = localStorage.getItem('token') || localStorage.getItem('userToken');
+    // 1. البحث عن التوكن بجميع المسميات المحتملة لضمان الحصول عليه
+    const token = localStorage.getItem('token') || 
+                  localStorage.getItem('userToken') || 
+                  localStorage.getItem('authToken');
     
-    // الحصول على معرف الشكوى من الرابط (URL Params)
+    // 2. الحصول على معرف الشكوى من الرابط
     const urlParams = new URLSearchParams(window.location.search);
     const complaintId = urlParams.get('id');
 
-    if (!complaintId || !token) {
-        window.location.href = 'citizen-dashboard.html';
+    console.log("Token status:", token ? "Found" : "Missing");
+    console.log("Complaint ID:", complaintId);
+
+    // 3. التحقق من البيانات (بدون تحويل تلقائي سريع)
+    if (!complaintId) {
+        document.getElementById('loading-msg').innerHTML = '<span style="color:red;">خطأ: لم يتم تحديد رقم الشكوى في الرابط.</span>';
+        return;
+    }
+
+    if (!token) {
+        alert("انتهت الجلسة أو لم يتم العثور على بيانات الدخول، سيتم توجيهك لصفحة الدخول.");
+        window.location.href = 'login.html';
         return;
     }
 
     try {
+        // 4. جلب البيانات من السيرفر
         const response = await fetch(`/api/complaints/${complaintId}`, {
             headers: { 'Authorization': `Bearer ${token}` }
         });
@@ -28,13 +42,16 @@ document.addEventListener('DOMContentLoaded', async function() {
             statusLabel.textContent = data.status;
             statusLabel.className = `status-badge status-${data.status}`;
 
-            // إظهار الكارت وإخفاء رسالة التحميل
+            // إخفاء رسالة التحميل وإظهار التفاصيل
             document.getElementById('loading-msg').style.display = 'none';
             document.getElementById('complaint-details').style.display = 'block';
         } else {
-            alert("تعذر العثور على الشكوى");
+            const errorData = await response.json();
+            document.getElementById('loading-msg').innerHTML = 
+                `<span style="color:red;">عذراً: ${errorData.message || 'تعذر جلب بيانات هذه الشكوى.'}</span>`;
         }
     } catch (error) {
-        console.error("خطأ في جلب البيانات:", error);
+        console.error("Fetch error:", error);
+        document.getElementById('loading-msg').innerHTML = '<span style="color:red;">حدث خطأ في الاتصال بالسيرفر.</span>';
     }
 });
