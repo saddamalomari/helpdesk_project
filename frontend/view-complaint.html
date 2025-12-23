@@ -5,22 +5,33 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تفاصيل الشكوى</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="citizen-dashboard.css"> <style>
+    <link rel="stylesheet" href="citizen-dashboard.css"> 
+    <style>
         .details-card { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-top: 20px; }
         .detail-item { margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
         .detail-item strong { color: #2c3e50; display: block; margin-bottom: 5px; }
         .status-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        #loading-msg { text-align: center; padding: 20px; font-weight: bold; color: #3498db; }
+        /* تحسين مظهر شارة الحالة */
+        .status-badge { padding: 5px 15px; border-radius: 20px; color: white; font-size: 0.9rem; }
+        .status-new { background-color: #3498db; }
+        .status-completed { background-color: #2ecc71; }
+        .status-pending { background-color: #f1c40f; }
     </style>
 </head>
 <body>
     <main class="main-content">
-        <header>
-            <a href="citizen-dashboard.html" style="text-decoration: none; color: #3498db;"><i class="fas fa-arrow-right"></i> عودة للوحة التحكم</a>
-            <h1>تفاصيل الشكوى</h1>
+        <header style="padding: 20px; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+            <a href="citizen-dashboard.html" style="text-decoration: none; color: #3498db; font-weight: bold;">
+                <i class="fas fa-arrow-right"></i> عودة للوحة التحكم
+            </a>
+            <h1 style="margin-top: 15px;">تفاصيل الشكوى</h1>
         </header>
 
-        <div class="dashboard-container">
-            <div id="loading-msg">جاري تحميل البيانات...</div>
+        <div class="dashboard-container" style="max-width: 800px; margin: 0 auto; padding: 20px;">
+            <div id="loading-msg">
+                <i class="fas fa-spinner fa-spin"></i> جاري تحميل البيانات...
+            </div>
             
             <div id="complaint-details" class="details-card" style="display: none;">
                 <div class="status-header">
@@ -38,11 +49,13 @@
                 </div>
                 <div class="detail-item">
                     <strong><i class="fas fa-align-left"></i> الوصف:</strong>
-                    <p id="view-description"></p>
+                    <p id="view-description" style="line-height: 1.6; color: #555;"></p>
                 </div>
                 <div id="view-media" class="detail-item">
                     <strong><i class="fas fa-paperclip"></i> المرفقات:</strong>
-                    <div id="media-container">لا يوجد مرفقات</div>
+                    <div id="media-container" style="background: #f9f9f9; padding: 10px; border-radius: 5px; margin-top: 10px;">
+                        لا يوجد مرفقات
+                    </div>
                 </div>
             </div>
         </div>
