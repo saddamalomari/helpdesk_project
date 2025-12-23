@@ -1,0 +1,62 @@
+/* تنسيقات صفحة تفاصيل الشكوى للمواطن */
+body {
+    background-color: #f8f9fa;
+    margin: 0;
+    direction: rtl;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.details-card {
+    background: white;
+    padding: 35px;
+    border-radius: 15px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    border-top: 5px solid #3498db;
+    max-width: 800px;
+    margin: 20px auto;
+}
+
+.status-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f1f1f1;
+}
+
+.detail-item {
+    margin-bottom: 20px;
+}
+
+.detail-item strong {
+    display: block;
+    color: #34495e;
+    margin-bottom: 8px;
+    font-size: 1rem;
+}
+
+.detail-item span, .detail-item p {
+    color: #555;
+    font-size: 1.1rem;
+    line-height: 1.6;
+}
+
+/* تنسيق المرفقات */
+#media-container {
+    background: #fdfdfd;
+    border: 1px dashed #ddd;
+    padding: 15px;
+    border-radius: 10px;
+    min-height: 50px;
+}
+
+.back-link {
+    color: #3498db;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+    font-weight: bold;
+}

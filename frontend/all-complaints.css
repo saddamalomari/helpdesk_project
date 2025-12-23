@@ -1,0 +1,67 @@
+/* تنسيقات صفحة عرض كافة الشكاوى للمدير */
+:root {
+    --dark-navy: #1a1a2e;
+    --gold-start: #bf953f;
+    --gold-gradient: linear-gradient(135deg, #bf953f, #aa771c);
+}
+
+body {
+    background-color: #f4f7f6;
+    margin: 0;
+    direction: rtl;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.dashboard-container {
+    max-width: 1200px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
+/* قسم الفلترة */
+.filter-section {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+}
+
+.filter-section select {
+    padding: 8px 15px;
+    border-radius: 8px;
+    background: var(--dark-navy);
+    color: white;
+    border: 1px solid var(--gold-start);
+    outline: none;
+    cursor: pointer;
+}
+
+/* تنسيق شارات الحالة (Badges) */
+.badge {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.status-new { background: #e3f2fd; color: #1976d2; }
+.status-in-progress { background: #fff3e0; color: #ef6c00; }
+.status-completed { background: #e8f5e9; color: #2e7d32; }
+
+/* زر التفاصيل الذهبي */
+.gold-btn {
+    background: var(--gold-gradient);
+    color: white;
+    border: none;
+    padding: 7px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.gold-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(170, 119, 28, 0.3);
+}
