@@ -1,67 +1,150 @@
-/* تنسيقات صفحة عرض كافة الشكاوى للمدير */
+/* =========================================
+   تنسيق سجل الشكاوى الملكي - وكالة العمري
+   ========================================= */
+
+/* استيراد الخطوط الفخمة */
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
+
 :root {
-    --dark-navy: #1a1a2e;
-    --gold-start: #bf953f;
-    --gold-gradient: linear-gradient(135deg, #bf953f, #aa771c);
+    --bg-dark: #0f172a;
+    --card-bg: #1e293b;
+    --gold-primary: #bf953f;
+    --gold-gradient: linear-gradient(135deg, #bf953f 0%, #fcf6ba 50%, #b38728 100%);
+    --text-white: #f1f5f9;
+    --shadow-lux: 0 15px 35px rgba(0, 0, 0, 0.4);
+    --border-color: rgba(191, 149, 63, 0.2);
 }
 
-body {
-    background-color: #f4f7f6;
-    margin: 0;
-    direction: rtl;
-    font-family: 'Segoe UI', sans-serif;
-}
-
+/* 1. تنسيق الحاوية الرئيسية */
 .dashboard-container {
-    max-width: 1200px;
-    margin: 30px auto;
+    max-width: 1300px;
+    margin: 40px auto;
     padding: 0 20px;
 }
 
-/* قسم الفلترة */
-.filter-section {
+/* 2. رأس البطاقة (العنوان + صندوق البحث) */
+.card-header {
     display: flex;
-    gap: 15px;
+    justify-content: space-between;
     align-items: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
 }
 
-.filter-section select {
-    padding: 8px 15px;
-    border-radius: 8px;
-    background: var(--dark-navy);
+.search-box {
+    position: relative;
+    width: 350px;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 12px 45px 12px 15px; /* مساحة للأيقونة */
+    background: var(--bg-dark);
+    border: 1.5px solid var(--border-color);
+    border-radius: 12px;
     color: white;
-    border: 1px solid var(--gold-start);
+    font-family: 'Cairo', sans-serif;
+    transition: all 0.3s ease;
+}
+
+.search-box input:focus {
+    border-color: var(--gold-primary);
+    box-shadow: 0 0 15px rgba(191, 149, 63, 0.2);
     outline: none;
-    cursor: pointer;
 }
 
-/* تنسيق شارات الحالة (Badges) */
+.search-box i {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--gold-primary);
+    font-size: 1.2rem;
+}
+
+/* 3. تنسيق الجدول المودرن */
+.table-responsive {
+    border-radius: 15px;
+    overflow: hidden; /* لضمان انحناء الزوايا */
+    box-shadow: var(--shadow-lux);
+    background: var(--card-bg);
+}
+
+.modern-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: right;
+}
+
+.modern-table thead tr {
+    background: rgba(15, 23, 42, 0.8);
+    color: var(--gold-primary);
+}
+
+.modern-table th {
+    padding: 20px;
+    font-weight: 900;
+    text-transform: uppercase;
+    font-size: 0.95rem;
+    border-bottom: 2px solid var(--gold-primary);
+}
+
+.modern-table td {
+    padding: 18px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: var(--text-white);
+    font-size: 0.9rem;
+}
+
+/* تأثير عند تمرير الماوس على الأسطر */
+.modern-table tbody tr {
+    transition: all 0.3s ease;
+}
+
+.modern-table tbody tr:hover {
+    background: rgba(191, 149, 63, 0.05);
+    transform: scale(1.002);
+}
+
+/* 4. تنسيق شارات الحالة (Badges) */
 .badge {
-    padding: 5px 12px;
-    border-radius: 20px;
-    font-size: 0.8rem;
+    padding: 6px 15px;
+    border-radius: 30px;
     font-weight: bold;
+    font-size: 0.8rem;
+    display: inline-block;
+    border: 1px solid transparent;
 }
 
-.status-new { background: #e3f2fd; color: #1976d2; }
-.status-in-progress { background: #fff3e0; color: #ef6c00; }
-.status-completed { background: #e8f5e9; color: #2e7d32; }
+/* تلوين الحالات ديناميكياً */
+.badge.completed { background: rgba(46, 204, 113, 0.2); color: #2ecc71; border-color: #2ecc71; }
+.badge.pending { background: rgba(241, 196, 15, 0.2); color: #f1c40f; border-color: #f1c40f; }
+.badge.new { background: rgba(52, 152, 219, 0.2); color: #3498db; border-color: #3498db; }
 
-/* زر التفاصيل الذهبي */
-.gold-btn {
+/* 5. تنسيق زر الإجراءات (العرض) */
+.icon-btn {
+    padding: 8px 18px;
     background: var(--gold-gradient);
-    color: white;
-    border: none;
-    padding: 7px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: 0.3s;
+    color: #0f172a !important;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 900;
+    font-size: 0.85rem;
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 8px;
+    transition: 0.3s;
 }
 
-.gold-btn:hover {
+.icon-btn:hover {
+    filter: brightness(1.2);
+    box-shadow: 0 5px 15px rgba(191, 149, 63, 0.4);
     transform: translateY(-2px);
-    box-shadow: 0 4px 10px rgba(170, 119, 28, 0.3);
+}
+
+/* استجابة الموبايل */
+@media (max-width: 768px) {
+    .card-header { flex-direction: column; gap: 20px; }
+    .search-box { width: 100%; }
 }
