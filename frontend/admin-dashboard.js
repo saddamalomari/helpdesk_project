@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // ✅ التحقق من التوكن لضمان صلاحية الجلسة
+    // ✅ 1. التحقق من التوكن لضمان صلاحية الجلسة
     const token = localStorage.getItem('token') || 
                   localStorage.getItem('userToken') || 
                   localStorage.getItem('authToken');
@@ -11,32 +11,86 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // =================================================
-    // ✅ التعديل الجديد: تفعيل بطاقة "الشكاوى النشطة" كزر للانتقال لصفحة عرض الكل
+    // ✅ 2. ميزة الوضع الليلي (Dark Mode)
     // =================================================
-    const activeComplaintsCard = document.getElementById('active-complaints')?.closest('.stat-card');
-    
-    if (activeComplaintsCard) {
-        activeComplaintsCard.style.cursor = 'pointer'; // تغيير شكل الماوس ليد عند الوقوف على البطاقة
-        
-        activeComplaintsCard.addEventListener('click', () => {
-            window.location.href = 'all-complaints.html'; // التوجه لصفحة جميع الشكاوى
-        });
-        
-        // إضافة تأثير حركي بسيط عند مرور الماوس لزيادة التفاعل
-        activeComplaintsCard.addEventListener('mouseenter', () => {
-            activeComplaintsCard.style.transform = 'translateY(-8px)';
-            activeComplaintsCard.style.boxShadow = '0 10px 25px rgba(191, 149, 63, 0.3)';
-            activeComplaintsCard.style.transition = 'all 0.3s ease';
-        });
-        
-        activeComplaintsCard.addEventListener('mouseleave', () => {
-            activeComplaintsCard.style.transform = 'translateY(0)';
-            activeComplaintsCard.style.boxShadow = '';
+    const themeToggle = document.getElementById('theme-toggle');
+    const savedTheme = localStorage.getItem('theme');
+
+    if (savedTheme === 'dark') {
+        document.body.setAttribute('data-theme', 'dark');
+        if(themeToggle) themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+    }
+
+    if(themeToggle) {
+        themeToggle.addEventListener('click', () => {
+            if (document.body.getAttribute('data-theme') === 'dark') {
+                document.body.removeAttribute('data-theme');
+                localStorage.setItem('theme', 'light');
+                themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+            } else {
+                document.body.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            }
+            loadAdminStats(); // إعادة رسم المخططات لتتناسب مع ألوان الثيم الجديد
         });
     }
 
     // =================================================
-    // دالة: جلب الإحصائيات (عدد الموظفين، الشكاوى، الأقسام)
+    // ✅ 3. تفعيل الرسوم البيانية (Charts)
+    // =================================================
+    let deptChart, perfChart;
+
+    function initCharts(stats) {
+        if (deptChart) deptChart.destroy();
+        if (perfChart) perfChart.destroy();
+
+        const isDark = document.body.getAttribute('data-theme') === 'dark';
+        const textColor = isDark ? '#e0e0e0' : '#2c3e50';
+
+        // رسم توزيع الأقسام
+        const deptCtx = document.getElementById('departmentChart').getContext('2d');
+        deptChart = new Chart(deptCtx, {
+            type: 'doughnut',
+            data: {
+                labels: stats.departments_labels || ['IT', 'HR', 'المالية', 'الاستقبال', 'الصيانة'],
+                datasets: [{
+                    data: stats.departments_data || [12, 19, 3, 5, 2], 
+                    backgroundColor: ['#bf953f', '#1a1a2e', '#e74c3c', '#3498db', '#2ecc71'],
+                    hoverOffset: 10
+                }]
+            },
+            options: {
+                plugins: { legend: { labels: { color: textColor, font: { family: 'Segoe UI' } } } }
+            }
+        });
+
+        // رسم أداء الشكاوى المنجزة
+        const perfCtx = document.getElementById('performanceChart').getContext('2d');
+        perfChart = new Chart(perfCtx, {
+            type: 'line',
+            data: {
+                labels: stats.performance_labels || ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'],
+                datasets: [{
+                    label: 'الشكاوى المنجزة',
+                    data: stats.performance_data || [5, 15, 10, 25, 20],
+                    borderColor: '#bf953f',
+                    backgroundColor: 'rgba(191, 149, 63, 0.1)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                scales: {
+                    y: { ticks: { color: textColor } },
+                    x: { ticks: { color: textColor } }
+                }
+            }
+        });
+    }
+
+    // =================================================
+    // ✅ 4. جلب الإحصائيات (Stats)
     // =================================================
     async function loadAdminStats() {
         try {
@@ -46,24 +100,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (response.ok) {
                 const stats = await response.json();
-                
-                // تحديث الأرقام الحية في الواجهة
-                if (document.getElementById('total-employees')) 
-                    document.getElementById('total-employees').textContent = stats.employees || 0;
-                
-                if (document.getElementById('active-complaints')) 
-                    document.getElementById('active-complaints').textContent = stats.active_complaints || 0;
-
-                if (document.getElementById('active-departments')) 
-                    document.getElementById('active-departments').textContent = stats.departments || 0;
+                document.getElementById('total-employees').textContent = stats.employees || 0;
+                document.getElementById('active-complaints').textContent = stats.active_complaints || 0;
+                initCharts(stats);
+            } else {
+                initCharts({});
             }
         } catch (error) {
             console.error("فشل تحميل الإحصائيات:", error);
+            initCharts({});
         }
     }
 
     // =================================================
-    // دالة: جلب وعرض قائمة الموظفين (مع منع الكاش)
+    // ✅ 5. جلب الموظفين (Fetch Employees)
     // =================================================
     async function fetchEmployees() {
         try {
@@ -78,43 +128,44 @@ document.addEventListener('DOMContentLoaded', () => {
             const tbody = document.getElementById('employees-tbody');
             if (tbody) tbody.innerHTML = ''; 
 
-            if (employees.length === 0) {
+            if (!employees || employees.length === 0) {
                 if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">لا يوجد موظفين حالياً.</td></tr>';
                 return;
             }
 
             employees.forEach(emp => {
-                // منع عرض حسابات المديرين في قائمة الموظفين العاديين
                 if(emp.role === 'Admin' || emp.role === 'admin') return;
 
                 const row = document.createElement('tr');
                 row.innerHTML = `
                     <td>${emp.employee_code || emp.employee_id || '#'}</td>
                     <td>
-                        <div class="user-info">
-                            <div class="avatar">${emp.name ? emp.name.charAt(0).toUpperCase() : '?'}</div>
+                        <div class="user-info" style="display:flex; align-items:center; gap:10px;">
+                            <div class="avatar" style="width:30px; height:30px; background:#bf953f; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px;">
+                                ${emp.name ? emp.name.charAt(0).toUpperCase() : '?'}
+                            </div>
                             ${emp.name}
                         </div>
                     </td>
-                    <td><span class="badge">${emp.department || 'غير محدد'}</span></td>
+                    <td><span class="badge" style="background:#eee; padding:4px 8px; border-radius:4px; font-size:12px; color:#333;">${emp.department || 'غير محدد'}</span></td>
                     <td>${emp.email}</td>
                     <td>${emp.phone || 'غير متوفر'}</td>
                     <td>
-                        <button class="icon-btn edit-btn" data-id="${emp.id}"><i class="fas fa-edit"></i></button>
-                        <button class="icon-btn delete-btn" data-id="${emp.id}"><i class="fas fa-trash-alt"></i></button>
+                        <button class="icon-btn edit-btn" data-id="${emp.id}"><i class="fas fa-edit" style="color:#3498db;"></i></button>
+                        <button class="icon-btn delete-btn" data-id="${emp.id}"><i class="fas fa-trash-alt" style="color:#e74c3c;"></i></button>
                     </td>
                 `;
                 if (tbody) tbody.appendChild(row);
             });
 
-            attachEventListeners(); // ربط أزرار الحذف والتعديل بعد إنشاء الصفوف
+            attachEventListeners();
         } catch (error) {
             console.error('Error fetching employees:', error);
         }
     }
 
     // =================================================
-    // دالة: إضافة موظف جديد
+    // ✅ 6. إدارة الموظفين (إضافة وتعديل وحذف)
     // =================================================
     const addForm = document.getElementById('add-employee-form');
     if (addForm) {
@@ -154,11 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // =================================================
-    // دالة: ربط أزرار الحذف والتعديل
-    // =================================================
     function attachEventListeners() {
-        // أزرار الحذف
         document.querySelectorAll('.delete-btn').forEach(btn => {
             btn.onclick = async function() {
                 const id = this.getAttribute('data-id');
@@ -175,7 +222,6 @@ document.addEventListener('DOMContentLoaded', () => {
             };
         });
 
-        // أزرار التعديل
         document.querySelectorAll('.edit-btn').forEach(btn => {
             btn.onclick = async function() {
                 const id = this.getAttribute('data-id');
@@ -186,7 +232,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if(res.ok) {
                     document.getElementById('edit-employee-db-id').value = data.id;
                     document.getElementById('edit-employee-name').value = data.name;
-                    document.getElementById('edit-employee-id').value = data.code || '';
+                    document.getElementById('edit-employee-id').value = data.employee_code || data.code || '';
                     document.getElementById('edit-department').value = data.department || '';
                     document.getElementById('edit-employee-email').value = data.email;
                     document.getElementById('edit-phone').value = data.phone || '';
@@ -196,7 +242,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // حفظ تعديلات الموظف
     const editForm = document.getElementById('edit-employee-form');
     if(editForm) {
         editForm.onsubmit = async (e) => {
@@ -228,13 +273,37 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // إغلاق نافذة التعديل (Modal)
+    // =================================================
+    // ✅ 7. نظام الإشعارات الفورية
+    // =================================================
+    function updateNotificationBadge() {
+        fetch('/api/admin/notifications/unread', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        })
+        .then(response => response.json())
+        .then(data => {
+            const badge = document.querySelector('.notify-badge');
+            if (badge) {
+                badge.textContent = data.count;
+                // إظهار الرقم فقط إذا كان أكبر من صفر
+                badge.style.display = data.count > 0 ? 'flex' : 'none';
+            }
+        })
+        .catch(err => console.error("Notification Fetch Error:", err));
+    }
+
+    // تشغيل تحديث الإشعارات فوراً ثم كل دقيقة
+    updateNotificationBadge();
+    setInterval(updateNotificationBadge, 60000);
+
+    // =================================================
+    // ✅ 8. تسجيل الخروج وإغلاق النوافذ
+    // =================================================
     const closeBtn = document.querySelector('.close-btn');
     if(closeBtn) {
         closeBtn.onclick = () => document.getElementById('edit-employee-modal').style.display = "none";
     }
 
-    // تسجيل الخروج
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
         logoutBtn.onclick = (e) => {
@@ -246,7 +315,7 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
-    // استدعاء البيانات عند تحميل الصفحة
+    // تشغيل الوظائف الأساسية عند التحميل
     loadAdminStats();
     fetchEmployees();
 });

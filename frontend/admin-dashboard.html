@@ -3,8 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>لوحة تحكم المدير</title>
+    <title>لوحة تحكم المدير - الاحترافية</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="admin-dashboard.css">
 </head>
 <body>
@@ -12,9 +13,21 @@
     <header class="header">
         <div class="header-content">
             <h1><i class="fas fa-user-shield"></i> لوحة تحكم المدير</h1>
-            <a href="login.html" class="logout-btn" id="logoutBtn">
-                <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
-            </a>
+            
+            <div class="header-actions" style="display: flex; align-items: center; gap: 20px;">
+                <button id="theme-toggle" class="theme-btn" style="background: none; border: none; color: #ffd700; cursor: pointer; font-size: 1.2rem;">
+                    <i class="fas fa-moon"></i>
+                </button>
+
+                <div class="notification-wrapper" style="position: relative; cursor: pointer;">
+                    <i class="fas fa-bell gold-text" style="font-size: 1.4rem;"></i>
+                    <span class="notify-badge" style="position: absolute; top: -5px; right: -5px; background: #e74c3c; color: white; border-radius: 50%; padding: 2px 6px; font-size: 0.7rem; font-weight: bold;">3</span>
+                </div>
+
+                <a href="login.html" class="logout-btn" id="logoutBtn">
+                    <i class="fas fa-sign-out-alt"></i> تسجيل الخروج
+                </a>
+            </div>
         </div>
     </header>
 
@@ -46,6 +59,17 @@
                     <span class="number">6</span>
                 </div>
             </div>
+        </div>
+
+        <div class="charts-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 25px;">
+            <section class="content-card" style="padding: 20px;">
+                <h3 class="gold-gradient-text" style="margin-bottom: 15px;"><i class="fas fa-chart-pie"></i> توزيع الشكاوى حسب القسم</h3>
+                <canvas id="departmentChart" style="max-height: 250px;"></canvas>
+            </section>
+            <section class="content-card" style="padding: 20px;">
+                <h3 class="gold-gradient-text" style="margin-bottom: 15px;"><i class="fas fa-chart-line"></i> معدل إغلاق التذاكر (أسبوعياً)</h3>
+                <canvas id="performanceChart" style="max-height: 250px;"></canvas>
+            </section>
         </div>
 
         <div class="admin-grid-layout">

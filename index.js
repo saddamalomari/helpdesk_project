@@ -3,8 +3,8 @@ const app = express();
 const db = require('./db'); 
 const cors = require('cors');
 require('dotenv').config();
-const path = require('path'); // ✅ موجودة مرة واحدة فقط
-const fs = require('fs');     // ✅ ضرورية لإنشاء المجلد
+const path = require('path'); 
+const fs = require('fs');     
 const multer = require('multer'); 
 const jwt = require('jsonwebtoken'); 
 const bcrypt = require('bcrypt');
@@ -265,20 +265,16 @@ app.post('/api/complaints', upload.fields([
     }
 });
 
-// ✅ نقطة اتصال جديدة: جلب شكاوى المواطن الخاصة به فقط
 app.get('/api/my-complaints', authenticateToken, async (req, res) => {
     try {
-        // 1. نجلب رقم هاتف المستخدم من جدول users
         const [userRows] = await db.execute('SELECT phone FROM users WHERE id = ?', [req.user.id]);
         
         if (userRows.length === 0 || !userRows[0].phone) {
-            // إذا لم يكن لديه هاتف مسجل، لن نجد شكاواه
             return res.json([]); 
         }
 
         const userPhone = userRows[0].phone;
 
-        // 2. نجلب الشكاوى التي تحمل نفس رقم الهاتف
         const [complaints] = await db.execute(
             'SELECT * FROM complaints WHERE phone = ? ORDER BY date_submitted DESC', 
             [userPhone]
@@ -291,7 +287,6 @@ app.get('/api/my-complaints', authenticateToken, async (req, res) => {
     }
 });
 
-// ✅ المسار المحدث: يسمح للمدير والموظف، والمواطن برؤية شكواه فقط
 app.get('/api/complaints/:id', authenticateToken, async (req, res) => {
     const userRole = req.user.role ? req.user.role.toLowerCase() : '';
     const userId = req.user.id;
@@ -306,11 +301,9 @@ app.get('/api/complaints/:id', authenticateToken, async (req, res) => {
 
         const complaint = rows[0];
 
-        // 1. إذا كان مدير أو موظف -> السماح بالوصول الكامل
         if (userRole === 'admin' || userRole === 'employee') {
             return res.json(complaint);
         } 
-        // 2. إذا كان مواطن -> التحقق من مطابقة رقم هاتفه مع الشكوى
         else if (userRole === 'citizen') {
             const [userRows] = await db.execute('SELECT phone FROM users WHERE id = ?', [userId]);
             const userPhone = userRows[0]?.phone;
@@ -328,13 +321,13 @@ app.get('/api/complaints/:id', authenticateToken, async (req, res) => {
         res.status(500).json({ message: 'فشل في جلب بيانات الشكوى.' });
     }
 });
+
 app.put('/api/complaints/:id/status', authenticateToken, async (req, res) => {
     const complaintId = req.params.id; 
     const { status } = req.body; 
 
     const userRole = req.user.role ? req.user.role.toLowerCase() : '';
 
-    // ✅ التعديل: السماح للموظف والمدير بتغيير الحالة
     if (userRole !== 'employee' && userRole !== 'admin') {
         return res.status(403).json({ message: 'غير مصرح لك بالوصول لهذه العملية.' });
     }
@@ -391,7 +384,6 @@ app.get('/api/follow-up/:refNumber', async (req, res) => {
 
 app.get('/api/employees', async (req, res) => {
     try {
-        // ✅ التعديل: ربطنا الجدولين لجلب القسم (department) والرقم الوظيفي الحقيقي
         const sql = `
             SELECT 
                 users.id, 
@@ -399,8 +391,8 @@ app.get('/api/employees', async (req, res) => {
                 users.email, 
                 users.phone,
                 users.role,
-                employees.department,    -- جلبنا القسم
-                employees.employee_code  -- جلبنا الرقم الوظيفي
+                employees.department,
+                employees.employee_code
             FROM users 
             LEFT JOIN employees ON users.employee_id = employees.employee_id 
             WHERE users.role = "Employee" OR users.role = "Admin" 
@@ -414,6 +406,7 @@ app.get('/api/employees', async (req, res) => {
         res.status(500).json({ message: "Internal Server Error" });
     }
 });
+
 app.get('/api/employees/:id', authenticateToken, checkAdminRole, async (req, res) => {
     const userId = req.params.id;
     try {
@@ -446,7 +439,7 @@ app.post('/api/employees', authenticateToken, checkAdminRole, async (req, res) =
     const { name, id, email, password, department, phone } = req.body; 
 
     if (!name || !id || !email || !password || !department || !phone) {
-        return res.status(400).json({ message: 'جميع حقول الموظف (بما فيها القسم والهاتف) مطلوبة.' });
+        return res.status(400).json({ message: 'جميع حقول الموظف مطلوبة.' });
     }
 
     const connection = await db.getConnection();
@@ -492,7 +485,7 @@ app.put('/api/employees/:id', authenticateToken, checkAdminRole, async (req, res
     const { name, id, email, department, phone, password } = req.body; 
 
     if (!name || !id || !email || !department || !phone) {
-        return res.status(400).json({ message: 'جميع الحقول (ما عدا كلمة المرور) مطلوبة.' });
+        return res.status(400).json({ message: 'جميع الحقول مطلوبة.' });
     }
 
     const connection = await db.getConnection();
@@ -529,7 +522,7 @@ app.put('/api/employees/:id', authenticateToken, checkAdminRole, async (req, res
     } catch (err) {
         await connection.rollback();
         console.error('❌ Employee Update Error:', err);
-        res.status(500).json({ message: 'فشل في تحديث بيانات الموظف: ' + err.message });
+        res.status(500).json({ message: 'فشل في تحديث بيانات الموظف.' });
     } finally {
         connection.release();
     }
@@ -537,37 +530,43 @@ app.put('/api/employees/:id', authenticateToken, checkAdminRole, async (req, res
 
 app.delete('/api/employees/:id', authenticateToken, checkAdminRole, async (req, res) => {
     const userId = req.params.id;
-
     try {
         const [result] = await db.execute('DELETE FROM users WHERE id=? AND role != "Admin"', [userId]);
-        
         if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'الموظف غير موجود أو لا يمكن حذف هذا السجل (قد يكون المدير).' });
+            return res.status(404).json({ message: 'الموظف غير موجود أو لا يمكن حذفه.' });
         }
-        
         res.json({ message: 'تم حذف الموظف بنجاح.' });
-
     } catch (err) {
         console.error('❌ Employee Delete Error:', err);
-        res.status(500).json({ message: 'فشل في حذف الموظف: ' + err.message });
+        res.status(500).json({ message: 'فشل في حذف الموظف.' });
     }
 });
-// ✅ API جديد لجلب إحصائيات لوحة تحكم المدير
+
+// ✅ [محدث] نقطة اتصال الإحصائيات (تدعم الرسوم البيانية)
 app.get('/api/admin/stats', authenticateToken, checkAdminRole, async (req, res) => {
     try {
-        // 1. حساب عدد الموظفين (User Role = Employee)
         const [empResult] = await db.execute('SELECT COUNT(*) as count FROM users WHERE role = "Employee"');
-        
-        // 2. حساب الشكاوى النشطة (التي حالتها "جديدة" أو "قيد المعالجة")
         const [complaintResult] = await db.execute('SELECT COUNT(*) as count FROM complaints WHERE status IN ("new", "in_progress")');
-
-        // 3. حساب عدد الأقسام (المميزة) من جدول الموظفين
         const [deptResult] = await db.execute('SELECT COUNT(DISTINCT department) as count FROM employees');
+
+        // إحصائيات الرسوم البيانية (Charts)
+        const [typeRows] = await db.execute('SELECT complaint_type as label, COUNT(*) as total FROM complaints GROUP BY complaint_type');
+        const [perfRows] = await db.execute(`
+            SELECT DATE_FORMAT(date_submitted, '%W') as day, COUNT(*) as count 
+            FROM complaints 
+            WHERE date_submitted >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+            GROUP BY day 
+            ORDER BY date_submitted ASC
+        `);
 
         res.json({
             employees: empResult[0].count,
             active_complaints: complaintResult[0].count,
-            departments: deptResult[0].count
+            departments: deptResult[0].count,
+            departments_labels: typeRows.map(r => r.label),
+            departments_data: typeRows.map(r => r.total),
+            performance_labels: perfRows.map(r => r.day),
+            performance_data: perfRows.map(r => r.count)
         });
 
     } catch (err) {
@@ -575,16 +574,28 @@ app.get('/api/admin/stats', authenticateToken, checkAdminRole, async (req, res) 
         res.status(500).json({ message: "فشل في جلب الإحصائيات" });
     }
 });
-// ✅ جلب كافة الشكاوى (خاص بصفحة المدير)
+
 app.get('/api/admin/complaints', authenticateToken, checkAdminRole, async (req, res) => {
     try {
-        // جلب جميع الشكاوى من الجدول وترتيبها من الأحدث للأقدم
         const [rows] = await db.execute('SELECT * FROM complaints ORDER BY date_submitted DESC');
         res.json(rows);
     } catch (err) {
-        console.error('❌ Error fetching all complaints for admin:', err);
+        console.error('❌ Error fetching all complaints:', err);
         res.status(500).json({ message: 'فشل في جلب قائمة الشكاوى للمدير' });
     }
 });
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => console.log(`Server running on port ${PORT}`));
+// ✅ جلب عدد الشكاوى الجديدة غير المقروءة للإشعارات
+app.get('/api/admin/notifications/unread', authenticateToken, checkAdminRole, async (req, res) => {
+    try {
+        // نعد فقط الشكاوى التي حالتها 'new'
+        const [rows] = await db.execute('SELECT COUNT(*) as unreadCount FROM complaints WHERE status = "new"');
+        
+        res.json({ count: rows[0].unreadCount });
+    } catch (err) {
+        console.error("❌ Notification Error:", err);
+        res.status(500).json({ message: "فشل جلب الإشعارات" });
+    }
+});
+app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Server running on port ${PORT}`));
