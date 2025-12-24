@@ -1,67 +1,86 @@
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. جلب التوكن والتأكد من وجوده في الكونسول
+    // 1. جلب التوكن
     const token = localStorage.getItem('token') || 
                   localStorage.getItem('userToken') || 
                   localStorage.getItem('authToken');
 
     console.log("التحقق من التوكن:", token);
 
-    // 2. شرط الحماية (إذا لم يوجد توكن يتم التحويل)
+    // 2. حماية الصفحة
     if (!token) {
-        console.error("❌ لا يوجد توكن! سيتم التحويل لصفحة الدخول خلال ثانيتين...");
-        setTimeout(() => {
-            window.location.href = 'login.html';
-        }, 2000); // تأخير بسيط لنرى رسالة الخطأ في الكونسول
+        console.error("❌ لا يوجد توكن!");
+        window.location.href = 'login.html';
         return;
     }
 
-    // 3. إذا وجد التوكن، نبدأ بجلب البيانات
     try {
-        console.log("✅ التوكن موجود، جاري جلب الشكاوى...");
+        console.log("✅ جاري طلب البيانات...");
         
+        // ملاحظة: إذا استمر خطأ 404، جرب تغيير المسار إلى '/api/complaints'
         const response = await fetch('/api/admin/complaints', {
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
         if (response.ok) {
             const complaints = await response.json();
-            const tbody = document.getElementById('complaints-list-tbody');
+            // تأكد أن هذا الـ ID مطابق لما هو موجود في الـ HTML (tbody)
+            const tbody = document.getElementById('complaints-table-body') || document.getElementById('complaints-list-tbody');
             
             if (!tbody) {
-                console.error("❌ لم يتم العثور على عنصر 'complaints-list-tbody' في صفحة HTML");
+                console.error("❌ لم يتم العثور على عنصر الجدول في HTML");
                 return;
             }
 
             tbody.innerHTML = ''; 
 
             if (complaints.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">لا توجد شكاوى مسجلة حالياً.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding:20px;">لا توجد شكاوى مسجلة حالياً.</td></tr>';
                 return;
             }
 
-            // 4. بناء الجدول ديناميكياً
+            // 3. بناء الجدول مع تطبيق التنسيقات الذهبية
             complaints.forEach(complaint => {
                 const row = document.createElement('tr');
+                
+                // تحديد لون الحالة
+                let statusClass = '';
+                if (complaint.status === 'new') statusClass = 'status-new';
+                else if (complaint.status === 'in_progress') statusClass = 'status-progress';
+                else if (complaint.status === 'completed') statusClass = 'status-completed';
+
                 row.innerHTML = `
-                    <td>#${complaint.id}</td>
+                    <td>TIC_${complaint.id}</td>
                     <td><strong>${complaint.full_name}</strong></td>
                     <td>${complaint.province} - ${complaint.area}</td>
-                    <td><span class="badge">${complaint.status}</span></td>
-                    <td>${new Date(complaint.date_submitted).toLocaleDateString('ar-JO')}</td>
+                    <td><span class="${statusClass}">${translateStatus(complaint.status)}</span></td>
+                    <td>${new Date(complaint.date_submitted).toLocaleDateString('ar-EG')}</td>
                     <td>
-                        <a href="admin-view-complaint.html?id=${complaint.id}" class="icon-btn" title="عرض التفاصيل">
-                            <i class="fas fa-eye" style="color:#bf953f;"></i> عرض
-                        </a>
+                        <button class="action-button view-details" onclick="window.location.href='admin-view-complaint.html?id=${complaint.id}'">
+                            <i class="fas fa-eye"></i> عرض
+                        </button>
                     </td>
                 `;
                 tbody.appendChild(row);
             });
             console.log("✨ تم تحميل الجدول بنجاح");
         } else {
-            console.error("❌ فشل السيرفر في الرد:", response.status);
+            console.error("❌ فشل السيرفر برقم:", response.status);
+            if(response.status === 404) {
+                alert("خطأ 404: المسار غير موجود بالسيرفر. تأكد من عنوان الـ API.");
+            }
         }
     } catch (err) {
-        console.error("❌ فشل في الاتصال بـ API:", err);
-        alert("حدث خطأ أثناء الاتصال بالقاعدة.");
+        console.error("❌ فشل الاتصال:", err);
     }
 });
+
+// دالة مساعدة لترجمة الحالة للعربية
+function translateStatus(status) {
+    const statuses = {
+        'new': 'جديدة',
+        'in_progress': 'قيد المعالجة',
+        'completed': 'تمت المعالجة',
+        'refused': 'مرفوضة'
+    };
+    return statuses[status] || status;
+}

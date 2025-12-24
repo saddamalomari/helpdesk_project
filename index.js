@@ -338,11 +338,13 @@ app.get('/api/my-complaints', authenticateToken, async (req, res) => {
  * جلب جميع الشكاوى (للموظفين والمديرين فقط)
  * هذا المسار تم تحديثه لمعالجة مشكلة الـ 403
  */
-app.get('/api/complaints', authenticateToken, checkStaffRole, async (req, res) => {
+app.get('/api/admin/complaints', authenticateToken, checkStaffRole, async (req, res) => {
     try {
-        console.log(`🔍 Staff Member ${req.user.email} is fetching all complaints.`);
+        console.log(`🔍 [Access Log] Staff Member ${req.user.email} is fetching all complaints.`);
         
+        // جلب البيانات الأساسية للجدول
         const [rows] = await db.execute('SELECT * FROM complaints ORDER BY date_submitted DESC');
+        
         res.json(rows);
     } catch (err) {
         console.error('❌ Staff Complaints Fetch Error:', err);
