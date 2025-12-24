@@ -1,6 +1,13 @@
+/* ===========================================================
+    لوحة تحكم الموظف - وكالة العمري (Help Desk Project)
+    المبرمج: صدام العمري (CIS Graduate)
+    الوظيفة: إدارة الشكاوى، الملف الشخصي، وتغيير الحالات
+    ===========================================================
+*/
+
 document.addEventListener('DOMContentLoaded', function() {
 
-    // --- العناصر الأساسية من الواجهة ---
+    // --- 1. العناصر الأساسية من الواجهة ---
     const tableBody = document.getElementById('complaints-table-body');
     const loadingRow = document.querySelector('.loading-row');
     const noComplaintsMessage = document.getElementById('no-complaints-message');
@@ -15,33 +22,30 @@ document.addEventListener('DOMContentLoaded', function() {
     const detailsModal = document.getElementById('details-modal');
     const profileModal = document.getElementById('profileModal');
     const changePassModal = document.getElementById('changePassModal');
+    const changePassBtn = document.getElementById('changePassBtn');
 
     let allComplaintsData = []; 
-    
-    // ✅ التعديل الأهم: مسار نسبي ليعمل السيرفر في أي مكان (Render / Local)
-    const API_BASE_URL = ''; 
-
     const token = localStorage.getItem('token') || localStorage.getItem('authToken');
-    // تأكد أنك تقرأ الروول (Role) بشكل صحيح من localStorage
-    const userRole = localStorage.getItem('role') || 'admin'; // أضف admin كاحتياط
+    const userRole = localStorage.getItem('role') || 'employee';
 
-    // ✅ 1. التحقق من الهوية والصلاحيات
+    // --- 2. التحقق من الهوية والصلاحيات ---
     if (!token) {
         window.location.href = 'login.html';
         return;
     }
 
     if (!userRole || !['employee', 'admin'].includes(userRole.toLowerCase())) {
-        alert('❌ غير مصرح لك بالوصول. هذه الصفحة مخصصة للموظفين فقط.');
+        alert('❌ غير مصرح لك بالوصول.');
         localStorage.clear();
         window.location.href = 'login.html';
         return;
     }
 
-    // ✅ 2. التحكم بالـ Sidebar والقوائم
+    // --- 3. وظائف الواجهة (Sidebar & Menus) ---
     if (toggleBtn) {
         toggleBtn.addEventListener('click', () => {
             sidebar.classList.toggle('closed');
+            sidebar.classList.toggle('active'); // للموبايل
             mainContent.classList.toggle('expanded');
             toggleBtn.classList.toggle('moved', sidebar.classList.contains('closed'));
         });
@@ -55,14 +59,22 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // ✅ 3. إدارة الملف الشخصي (Profile)
+    // فتح مودال تغيير كلمة المرور
+    if (changePassBtn) {
+        changePassBtn.onclick = (e) => {
+            e.preventDefault();
+            changePassModal.style.display = "block";
+        };
+    }
+
+    // --- 4. إدارة الملف الشخصي (Profile) ---
     const profileBtn = document.getElementById('profileBtn');
     if (profileBtn) {
         profileBtn.onclick = async (e) => {
             e.preventDefault();
             try {
                 const response = await fetch(`/api/profile`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: { 'Authorization': 'Bearer ' + token }
                 });
                 const data = await response.json();
                 
@@ -83,7 +95,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     }
 
-    // ✅ 4. تغيير كلمة المرور
+    // --- 5. تغيير كلمة المرور ---
     const changePassForm = document.getElementById('changePassForm');
     if (changePassForm) {
         changePassForm.onsubmit = async (e) => {
@@ -112,7 +124,7 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     }
 
-    // ✅ 5. تسجيل الخروج
+    // --- 6. تسجيل الخروج ---
     const logoutBtn = document.getElementById('logoutBtn');
     if (logoutBtn) {
         logoutBtn.onclick = (e) => {
@@ -124,11 +136,21 @@ document.addEventListener('DOMContentLoaded', function() {
         };
     }
 
-    // ✅ 6. جلب وعرض الشكاوى
+    // --- 7. دوال المعالجة والعرض (Logic) ---
     const formatDate = (dateString) => {
         const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
         const date = new Date(dateString);
         return isNaN(date) || dateString === null ? 'غير متوفر' : date.toLocaleDateString('ar-EG', options);
+    };
+
+    const getStatusClass = (status) => {
+        switch (status) {
+            case 'new': return 'status-new';
+            case 'in_progress': return 'status-progress';
+            case 'completed': return 'status-completed';
+            case 'refused': return 'status-refused';
+            default: return '';
+        }
     };
 
     const renderComplaintsTable = (complaintsToRender) => {
@@ -142,8 +164,10 @@ document.addEventListener('DOMContentLoaded', function() {
         complaintsToRender.forEach(complaint => {
             const row = tableBody.insertRow();
             const sentDate = formatDate(complaint.date_submitted); 
+            const statusClass = getStatusClass(complaint.status);
+
             const statusDropdownHtml = `
-                <select class="status-dropdown form-control" data-id="${complaint.id}" style="padding: 5px; width: auto;">
+                <select class="status-dropdown form-control ${statusClass}" data-id="${complaint.id}" style="padding: 5px; width: auto;">
                     <option value="new" ${complaint.status === 'new' ? 'selected' : ''}>جديدة</option>
                     <option value="in_progress" ${complaint.status === 'in_progress' ? 'selected' : ''}>قيد المعالجة</option>
                     <option value="completed" ${complaint.status === 'completed' ? 'selected' : ''}>تمت المعالجة</option>
@@ -160,32 +184,24 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     };
 
-   const fetchComplaints = async () => {
-    try {
-        if(loadingRow) loadingRow.style.display = 'table-row';
-        
-        // التعديل: التأكد من المسار الصحيح (جرب إضافة /admin إذا لم يعمل الأساسي)
-        const response = await fetch('/api/admin/complaints', { 
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
+    const fetchComplaints = async () => {
+        try {
+            if(loadingRow) loadingRow.style.display = 'table-row';
+            const response = await fetch('/api/admin/complaints', { 
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
 
-        console.log("Response Status:", response.status); // سيعطيك 200 إذا نجح و 404 إذا فشل
+            if (!response.ok) throw new Error(`فشل جلب البيانات: ${response.status}`);
+            
+            allComplaintsData = await response.json();
+            if(loadingRow) loadingRow.style.display = 'none';
+            renderComplaintsTable(allComplaintsData);
+        } catch (error) {
+            if(loadingRow) loadingRow.style.display = 'none';
+            tableBody.innerHTML = `<tr><td colspan="6" style="color: red; text-align: center;">❌ ${error.message}</td></tr>`;
+        }
+    };
 
-        if (!response.ok) throw new Error(`فشل جلب البيانات: ${response.status}`);
-        
-        allComplaintsData = await response.json();
-        console.log("Data Received:", allComplaintsData); // للتأكد من وصول المصفوفة
-
-        if(loadingRow) loadingRow.style.display = 'none';
-        renderComplaintsTable(allComplaintsData);
-    } catch (error) {
-        console.error("Fetch Error:", error);
-        if(loadingRow) loadingRow.style.display = 'none';
-        tableBody.innerHTML = `<tr><td colspan="7" style="color: red; text-align: center;">❌ ${error.message}</td></tr>`;
-    }
-};
-
-    // ✅ 7. عرض التفاصيل والوسائط (صور/فيديو)
     const showComplaintDetails = async (id) => {
         try {
             const response = await fetch(`/api/complaints/${id}`, { 
@@ -204,23 +220,20 @@ document.addEventListener('DOMContentLoaded', function() {
             const photoLink = document.getElementById('detail-photo-link');
             const videoLink = document.getElementById('detail-video-link');
             
-            // روابط نسبية للمرفقات
             if (complaint.photo_path) {
                 photoLink.href = `/uploads/${complaint.photo_path}`;
                 photoLink.textContent = 'عرض الصورة المرفقة';
-                photoLink.style.pointerEvents = 'auto';
+                photoLink.style.display = 'inline-block';
             } else {
-                photoLink.textContent = 'لا يوجد صورة';
-                photoLink.style.pointerEvents = 'none';
+                photoLink.style.display = 'none';
             }
 
             if (complaint.video_path) {
                 videoLink.href = `/uploads/${complaint.video_path}`;
                 videoLink.textContent = 'عرض الفيديو المرفق';
-                videoLink.style.pointerEvents = 'auto';
+                videoLink.style.display = 'inline-block';
             } else {
-                videoLink.textContent = 'لا يوجد فيديو';
-                videoLink.style.pointerEvents = 'none';
+                videoLink.style.display = 'none';
             }
             detailsModal.style.display = 'block';
         } catch (error) {
@@ -228,7 +241,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
-    // ✅ 8. الفلترة والبحث
     const filterAndSearchComplaints = () => {
         const selectedStatus = statusFilter.value;
         const searchTerm = searchInput.value.toLowerCase().trim();
@@ -240,13 +252,14 @@ document.addEventListener('DOMContentLoaded', function() {
         if (searchTerm) {
             filteredList = filteredList.filter(c => 
                 `tic_${c.id}`.includes(searchTerm) || 
-                (c.complaint_type || '').toLowerCase().includes(searchTerm)
+                (c.complaint_type || '').toLowerCase().includes(searchTerm) ||
+                (c.full_name || '').toLowerCase().includes(searchTerm)
             );
         }
         renderComplaintsTable(filteredList);
     };
 
-    // --- تشغيل الدوال والـ Listeners ---
+    // --- 8. إدارة الأحداث (Event Listeners) ---
     fetchComplaints();
 
     if(statusFilter) statusFilter.addEventListener('change', filterAndSearchComplaints);
@@ -256,6 +269,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.target.classList.contains('view-details')) {
             showComplaintDetails(e.target.getAttribute('data-id'));
         }
+        // إغلاق المودالات
         if (e.target.classList.contains('close') || e.target.classList.contains('close-modal')) {
             detailsModal.style.display = 'none';
             profileModal.style.display = 'none';
@@ -266,13 +280,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // تحديث الحالة عند تغيير الـ Dropdown
+    // تحديث الحالة فوراً مع تغيير اللون
     document.addEventListener('change', async (e) => {
         if (e.target.classList.contains('status-dropdown')) {
             const id = e.target.getAttribute('data-id');
             const newStatus = e.target.value;
+            const dropdown = e.target;
+
             try {
-                e.target.disabled = true; 
+                dropdown.disabled = true; 
                 const res = await fetch(`/api/complaints/${id}/status`, {
                     method: 'PUT',
                     headers: { 
@@ -281,15 +297,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     },
                     body: JSON.stringify({ status: newStatus })
                 });
+
                 if (res.ok) {
-                    alert("✔ تم تحديث الحالة.");
+                    // تحديث كلاس اللون فوراً
+                    dropdown.classList.remove('status-new', 'status-progress', 'status-completed', 'status-refused');
+                    dropdown.classList.add(getStatusClass(newStatus));
+                    
                     const idx = allComplaintsData.findIndex(c => c.id == id);
                     if (idx > -1) allComplaintsData[idx].status = newStatus;
+                } else {
+                    alert("❌ فشل التحديث في السيرفر.");
                 }
             } catch (error) {
-                alert("❌ فشل التحديث.");
+                alert("❌ خطأ في الاتصال.");
             } finally {
-                e.target.disabled = false;
+                dropdown.disabled = false;
             }
         }
     });

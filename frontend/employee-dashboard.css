@@ -1,6 +1,4 @@
-/* =========================================
-   تنسيق لوحة تحكم الموظف - وكالة العمري (صدام CIS)
-   ========================================= */
+
 @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
 
 :root {
@@ -169,3 +167,24 @@ body {
 }
 
 .attachment-link:hover { background: var(--gold-primary); color: #0f172a; }
+/* ألوان حالات الشكوى */
+.status-new { color: #3498db; font-weight: bold; }        /* أزرق للجديدة */
+.status-progress { color: #f1c40f; font-weight: bold; }   /* أصفر لقيد المعالجة */
+.status-completed { color: #27ae60; font-weight: bold; }  /* أخضر للمكتملة */
+.status-refused { color: #e74c3c; font-weight: bold; }    /* أحمر للمرفوضة */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        transform: translateX(100%); /* مخفي افتراضياً على الموبايل */
+    }
+    .sidebar.active {
+        transform: translateX(0);
+    }
+    .main-content {
+        margin-right: 0 !important;
+        padding: 15px;
+    }
+    .toggle-btn {
+        display: block; /* تأكد من ظهور زر القائمة */
+    }
+}

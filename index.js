@@ -1,3 +1,12 @@
+/**
+ * ============================================================
+ * مشروع نظام إدارة الشكاوى والدعم الفني (Help Desk)
+ * المبرمج: صدام العمري
+ * التعديل: نظام حماية متقدم ومعالجة أخطاء الصلاحيات
+ * التاريخ: ديسمبر 2025
+ * ============================================================
+ */
+
 const express = require('express');
 const app = express();
 const db = require('./db'); 
@@ -9,240 +18,282 @@ const multer = require('multer');
 const jwt = require('jsonwebtoken'); 
 const bcrypt = require('bcrypt');
 
-// ✅ كود إنشاء مجلد uploads تلقائياً إذا لم يكن موجوداً
-const dir = path.join(__dirname, 'frontend/uploads');
-if (!fs.existsSync(dir)){
-    fs.mkdirSync(dir, { recursive: true });
-    console.log("✅ Created uploads directory successfully.");
+// --- إعدادات البيئة والمجلدات ---
+
+// كود إنشاء مجلد uploads تلقائياً لضمان عدم حدوث خطأ عند الرفع
+const uploadsDir = path.join(__dirname, 'frontend/uploads');
+if (!fs.existsSync(uploadsDir)){
+    fs.mkdirSync(uploadsDir, { recursive: true });
+    console.log("✅ [System] Created uploads directory successfully.");
 }
 
+// إعداد CORS للسماح بالطلبات من المتصفح
 app.use(cors());
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// إعداد Multer
+// إعداد السيرفر لقراءة الملفات الثابتة (Frontend)
+app.use(express.static(path.join(__dirname, 'frontend')));
+
+/**
+ * إعداد Multer لرفع الملفات (صور وفيديو)
+ * يتم تخزين الملفات بأسماء فريدة لمنع التداخل
+ */
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, dir); 
+        cb(null, uploadsDir); 
     },
     filename: (req, file, cb) => {
         const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-        cb(null, uniqueSuffix + '-' + file.originalname.replace(/\s+/g, '-'));
+        const ext = path.extname(file.originalname);
+        cb(null, 'FILE-' + uniqueSuffix + ext);
     }
 });
 
-const upload = multer({ storage: storage });
+// فلترة الملفات المرفوعة للتأكد من أنها صور أو فيديو فقط
+const fileFilter = (req, file, cb) => {
+    if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
+        cb(null, true);
+    } else {
+        cb(new Error('نوع الملف غير مدعوم! يسمح فقط بالصور والفيديوهات.'), false);
+    }
+};
 
-// تأكد من أن السيرفر يقرأ مجلد frontend
-app.use(express.static(path.join(__dirname, 'frontend')));
-
-// تعديل المسار لفتح صفحة login.html بدلاً من index.html
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'frontend', 'login.html')); 
+const upload = multer({ 
+    storage: storage,
+    fileFilter: fileFilter,
+    limits: { fileSize: 50 * 1024 * 1024 } // حد أقصى 50 ميجابايت
 });
 
-// Middleware للتحقق من التوكن
+// --- برمجيات التحقق والحماية (Middlewares) ---
+
+/**
+ * نظام تسجيل العمليات (Logger)
+ * يقوم بطباعة كل طلب يصل للسيرفر لمراقبة النشاط
+ */
+app.use((req, res, next) => {
+    const now = new Date().toISOString();
+    console.log(`[${now}] ${req.method} request to: ${req.url}`);
+    next();
+});
+
+/**
+ * Middleware للتحقق من التوكن (JWT)
+ * تم تحديثه ليعالج مشكلة الصلاحيات (Role Normalization)
+ */
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1]; 
     
     if (token == null) {
-        return res.status(401).json({ message: 'غير مصرح: يجب تسجيل الدخول.' });
+        return res.status(401).json({ message: 'غير مصرح: يجب تسجيل الدخول للوصول لهذه الخدمة.' });
     }
 
     jwt.verify(token, process.env.JWT_SECRET || 'YOUR_SECRET_KEY', (err, user) => {
         if (err) {
-            console.error('JWT Verification Error:', err);
-            return res.status(403).json({ message: 'رمز الدخول غير صالح أو منتهي الصلاحية.' });
+            console.error('❌ JWT Verification Error:', err.message);
+            return res.status(403).json({ message: 'جلسة العمل انتهت أو الرمز غير صالح.' });
         }
-        req.user = user; 
+        
+        // تحويل الدور دائماً إلى حروف صغيرة لمنع أخطاء المقارنة (Admin vs admin)
+        req.user = {
+            ...user,
+            role: user.role ? user.role.toLowerCase() : 'guest'
+        };
         next();
     });
 };
 
-// Middleware للتحقق من الآدمن
+/**
+ * Middleware للتحقق من صلاحية المدير (Admin)
+ */
 const checkAdminRole = (req, res, next) => {
-    const userRole = req.user.role ? req.user.role.toLowerCase() : '';
-
-    if (userRole !== 'admin') {
-        return res.status(403).json({ message: 'ممنوع: هذه العملية تتطلب صلاحيات المدير (admin).' });
+    if (req.user.role !== 'admin') {
+        console.warn(`⚠️ Unauthorized access attempt by user ID: ${req.user.id}`);
+        return res.status(403).json({ message: 'ممنوع: هذه العملية تتطلب صلاحيات المدير فقط.' });
     }
     next();
 };
 
-// --- ROUTES ---
+/**
+ * Middleware للتحقق من صلاحية الموظف أو المدير
+ */
+const checkStaffRole = (req, res, next) => {
+    if (req.user.role !== 'employee' && req.user.role !== 'admin') {
+        return res.status(403).json({ message: 'ممنوع: هذه الصفحة مخصصة للموظفين فقط.' });
+    }
+    next();
+};
 
+// --- ROUTES: المصادقة (Authentication) ---
+
+// الصفحة الرئيسية (تحويل لصفحة تسجيل الدخول)
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'frontend', 'login.html')); 
+});
+
+/**
+ * تسجيل الدخول
+ */
 app.post('/api/login', async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-        return res.status(400).json({ message: 'جميع الحقول مطلوبة' });
+        return res.status(400).json({ message: 'يرجى إدخال البريد الإلكتروني وكلمة المرور' });
     }
 
     try {
         const [rows] = await db.execute('SELECT * FROM users WHERE email = ?', [email]);
 
         if (rows.length === 0) {
-            return res.status(401).json({ message: 'البريد الإلكتروني أو كلمة المرور غير صحيحة' });
+            return res.status(401).json({ message: 'بيانات الدخول غير صحيحة' });
         }
 
         const user = rows[0];
         const isValid = await bcrypt.compare(password, user.password);
         
         if (!isValid) {
-            return res.status(401).json({ message: 'البريد الإلكتروني أو كلمة المرور غير صحيحة' });
+            return res.status(401).json({ message: 'بيانات الدخول غير صحيحة' });
         }
 
+        // إنشاء التوكن مع تضمين الدور والمعلومات الأساسية
         const token = jwt.sign(
             { id: user.id, role: user.role, email: user.email },
             process.env.JWT_SECRET || 'YOUR_SECRET_KEY',
             { expiresIn: '7d' } 
         );
 
+        console.log(`✅ User Logged In: ${user.email} (Role: ${user.role})`);
+
         res.json({
             message: 'تم تسجيل الدخول بنجاح',
-            role: user.role,
+            role: user.role.toLowerCase(), // نرسله بصيغة صغيرة للفرونت إند
             token: token,
+            full_name: user.full_name
         });
 
     } catch (err) {
         console.error("❌ Login Error:", err);
-        res.status(500).json({ message: 'حدث خطأ في السيرفر' });
+        res.status(500).json({ message: 'حدث خطأ في السيرفر أثناء محاولة تسجيل الدخول' });
     }
 });
 
-app.get('/api/profile', authenticateToken, async (req, res) => {
-    try {
-        const userId = req.user.id; 
-        
-        const sql = `
-            SELECT 
-                users.full_name, 
-                users.email,
-                users.phone,
-                employees.department,
-                employees.employee_code,
-                users.province
-            FROM users
-            LEFT JOIN employees ON users.employee_id = employees.employee_id
-            WHERE users.id = ?
-        `;
-        
-        const [rows] = await db.execute(sql, [userId]);
-        
-        if (rows.length === 0) {
-            return res.status(404).json({ message: 'المستخدم غير موجود.' });
-        }
-        
-        const userData = rows[0];
-
-        if (!userData.phone) userData.phone = 'غير متوفر';
-        if (!userData.department) userData.department = 'غير محدد';
-        if (!userData.employee_code) userData.employee_code = 'غير متوفر';
-
-        res.json(userData);
-
-    } catch (err) {
-        console.error('❌ Profile Fetch Error:', err);
-        res.status(500).json({ message: 'فشل في جلب بيانات الملف الشخصي.' });
-    }
-});
-
+/**
+ * إنشاء حساب جديد
+ */
 app.post('/api/signup', async (req, res) => {
     const { name, email, password, province, role, employee_id, phone } = req.body; 
     
-    if (!password) return res.status(400).json({ message: 'كلمة المرور مطلوبة.' });
-    if (!name || !email || !role) { 
-        return res.status(400).json({ message: 'الاسم، البريد، والدور مطلوبة' });
+    if (!password || !name || !email || !role) { 
+        return res.status(400).json({ message: 'جميع الحقول الأساسية مطلوبة' });
     }
 
     try {
-        const saltRounds = 10;
-        const finalPassword = await bcrypt.hash(password, saltRounds);
-
-        const [existing] = await db.execute('SELECT * FROM users WHERE email=?', [email]);
+        // فحص وجود الحساب مسبقاً
+        const [existing] = await db.execute('SELECT id FROM users WHERE email=?', [email]);
         if (existing.length > 0) {
-            return res.status(400).json({ message: 'البريد الإلكتروني موجود مسبقاً' });
+            return res.status(400).json({ message: 'هذا البريد الإلكتروني مسجل بالفعل' });
         }
 
-        if (role === 'employee') {
-            if (!employee_id) return res.status(400).json({ message: 'الرجاء إدخال الرقم الوظيفي.' });
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // التعامل مع منطق الموظف
+        if (role.toLowerCase() === 'employee') {
+            if (!employee_id) return res.status(400).json({ message: 'الرقم الوظيفي مطلوب للموظفين.' });
             
-            const [employeeRows] = await db.execute('SELECT * FROM employees WHERE employee_code = ?', [employee_id]);
-            if (employeeRows.length === 0) return res.status(401).json({ message: 'الرقم الوظيفي غير صحيح أو غير معتمد.' });
+            const [empRows] = await db.execute('SELECT * FROM employees WHERE employee_code = ?', [employee_id]);
+            if (empRows.length === 0) return res.status(401).json({ message: 'الرقم الوظيفي غير موجود في قاعدة بيانات الموظفين المعتمدين.' });
             
-            const [userCheck] = await db.execute('SELECT * FROM users WHERE employee_id = ?', [employee_id]);
-            if (userCheck.length > 0) return res.status(400).json({ message: 'هذا الرقم الوظيفي مسجل بالفعل بحساب آخر.' });
+            const [userCheck] = await db.execute('SELECT id FROM users WHERE employee_id = ?', [employee_id]);
+            if (userCheck.length > 0) return res.status(400).json({ message: 'هذا الرقم الوظيفي مرتبط بحساب مستخدم آخر.' });
             
             await db.execute(
-                'INSERT INTO users (full_name, email, password, province, role, employee_id, phone) VALUES (?, ?, ?, ?, ?, ?, ?)', 
-                [name, email, finalPassword, null, role, employee_id, phone] 
+                'INSERT INTO users (full_name, email, password, role, employee_id, phone) VALUES (?, ?, ?, ?, ?, ?)', 
+                [name, email, hashedPassword, 'Employee', employee_id, phone] 
             );
-        } else if (role === 'citizen') {
-            if (!province) return res.status(400).json({ message: 'الرجاء اختيار المحافظة.' });
-            if (!phone) return res.status(400).json({ message: 'الرجاء إدخال رقم الهاتف.' });
+        } 
+        // التعامل مع منطق المواطن
+        else if (role.toLowerCase() === 'citizen') {
+            if (!province || !phone) return res.status(400).json({ message: 'المحافظة ورقم الهاتف مطلوبان للمواطن.' });
             
             await db.execute(
-                'INSERT INTO users (full_name, email, password, province, role, employee_id, phone) VALUES (?, ?, ?, ?, ?, ?, ?)', 
-                [name, email, finalPassword, province, role, null, phone] 
+                'INSERT INTO users (full_name, email, password, province, role, phone) VALUES (?, ?, ?, ?, ?, ?)', 
+                [name, email, hashedPassword, province, 'Citizen', phone] 
             );
         } else {
-            await db.execute(
-                'INSERT INTO users (full_name, email, password, province, role, employee_id, phone) VALUES (?, ?, ?, ?, ?, ?, ?)', 
-                [name, email, finalPassword, null, role, null, phone] 
-            );
+            return res.status(400).json({ message: 'نوع المستخدم غير صالح' });
         }
         
-        res.json({ message: 'تم إنشاء الحساب بنجاح' });
+        res.status(201).json({ message: 'تم إنشاء الحساب بنجاح، يمكنك الآن تسجيل الدخول' });
     } catch (err) {
         console.error('❌ Signup Error:', err);
-        res.status(500).json({ message: 'حدث خطأ في السيرفر' });
+        res.status(500).json({ message: 'حدث خطأ غير متوقع أثناء إنشاء الحساب' });
+    }
+});
+
+// --- ROUTES: الملف الشخصي (Profile) ---
+
+app.get('/api/profile', authenticateToken, async (req, res) => {
+    try {
+        const sql = `
+            SELECT 
+                u.full_name, u.email, u.phone, u.province, u.role,
+                e.department, e.employee_code
+            FROM users u
+            LEFT JOIN employees e ON u.employee_id = e.employee_id
+            WHERE u.id = ?
+        `;
+        
+        const [rows] = await db.execute(sql, [req.user.id]);
+        
+        if (rows.length === 0) return res.status(404).json({ message: 'المستخدم غير موجود.' });
+        
+        // تنظيف البيانات قبل الإرسال
+        const data = rows[0];
+        data.role = data.role.toLowerCase();
+        res.json(data);
+
+    } catch (err) {
+        console.error('❌ Profile Error:', err);
+        res.status(500).json({ message: 'فشل في جلب بيانات الملف الشخصي.' });
     }
 });
 
 app.post('/api/change-password', authenticateToken, async (req, res) => {
     const { old_password, new_password } = req.body;
-    const email = req.user.email; 
-
-    if (!old_password || !new_password) return res.status(400).json({ message: 'الرجاء ملء جميع الحقول المطلوبة.' });
+    if (!old_password || !new_password) return res.status(400).json({ message: 'يرجى ملء الحقول المطلوبة' });
 
     try {
-        const [rows] = await db.execute('SELECT password FROM users WHERE email=?', [email]);
-        if (rows.length === 0) return res.status(404).json({ message: 'المستخدم غير موجود.' });
+        const [rows] = await db.execute('SELECT password FROM users WHERE id=?', [req.user.id]);
+        const isValid = await bcrypt.compare(old_password, rows[0].password);
         
-        const hashedPasswordStored = rows[0].password;
-        const isMatch = await bcrypt.compare(old_password, hashedPasswordStored);
-        if (!isMatch) {
-            return res.status(401).json({ message: 'كلمة المرور القديمة غير صحيحة.' });
-        }
+        if (!isValid) return res.status(401).json({ message: 'كلمة المرور القديمة غير صحيحة' });
 
-        if (old_password === new_password) {
-            return res.status(400).json({ message: 'كلمة المرور الجديدة يجب أن تختلف عن القديمة.' });
-        }
+        const hashed = await bcrypt.hash(new_password, 10);
+        await db.execute('UPDATE users SET password=? WHERE id=?', [hashed, req.user.id]);
 
-        const newHashedPassword = await bcrypt.hash(new_password, 10);
-        await db.execute('UPDATE users SET password=? WHERE email=?', [newHashedPassword, email]);
-
-        res.json({ message: 'تم تغيير كلمة المرور بنجاح!' });
+        res.json({ message: 'تم تحديث كلمة المرور بنجاح' });
     } catch (err) {
-        console.error('❌ Database Error during password change:', err);
-        res.status(500).json({ message: 'حدث خطأ في السيرفر أثناء تغيير كلمة المرور.' });
+        res.status(500).json({ message: 'خطأ في تحديث كلمة المرور' });
     }
 });
 
+// --- ROUTES: إدارة الشكاوى (Complaints) ---
+
+/**
+ * تقديم شكوى جديدة (متاح للجميع)
+ */
 app.post('/api/complaints', upload.fields([
     { name: 'photo_attachment', maxCount: 1 },
     { name: 'video_attachment', maxCount: 1 }
 ]), async (req, res) => {
     const { full_name, phone, province, area, complaint_type, description, privacy } = req.body;
     
-    const photoPath = req.files && req.files['photo_attachment'] ? req.files['photo_attachment'][0].filename : null;
-    const videoPath = req.files && req.files['video_attachment'] ? req.files['video_attachment'][0].filename : null;
+    const photo = req.files['photo_attachment'] ? req.files['photo_attachment'][0].filename : null;
+    const video = req.files['video_attachment'] ? req.files['video_attachment'][0].filename : null;
 
-    const requiredFields = { full_name, phone, province, area, complaint_type, description, privacy };
-    for (const key in requiredFields) {
-        if (!requiredFields[key] || requiredFields[key].trim() === '') {
-            return res.status(400).json({ message: `بيانات ناقصة: لم يتم استلام حقل ${key}` });
-        }
+    if (!full_name || !phone || !description) {
+        return res.status(400).json({ message: 'يرجى ملء البيانات الأساسية للشكوى' });
     }
 
     try {
@@ -250,368 +301,256 @@ app.post('/api/complaints', upload.fields([
             `INSERT INTO complaints
              (full_name, phone, province, area, complaint_type, privacy, description, photo_path, video_path, status, date_submitted)
              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'new', NOW())`,
-            [full_name, phone, province, area, complaint_type, privacy, description, photoPath, videoPath]
+            [full_name, phone, province, area, complaint_type, privacy, description, photo, video]
         );
         
         res.json({ 
             id: result.insertId, 
-            message: 'تم إضافة الشكوى بنجاح',
-            province: province,
-            area: area
+            message: 'تم تسجيل الشكوى بنجاح، سيتم التواصل معك قريباً',
+            reference: `TIC-${Date.now().toString().slice(-6)}-${result.insertId}`
         });
     } catch (err) {
-        console.error('❌ Database Error:', err);
-        res.status(500).json({ message: 'حدث خطأ في قاعدة البيانات: ' + err.message });
+        console.error('❌ Database Complaint Error:', err);
+        res.status(500).json({ message: 'فشل في حفظ الشكوى في قاعدة البيانات' });
     }
 });
 
+/**
+ * جلب شكاوى المواطن (المستخدم الحالي)
+ */
 app.get('/api/my-complaints', authenticateToken, async (req, res) => {
     try {
-        const [userRows] = await db.execute('SELECT phone FROM users WHERE id = ?', [req.user.id]);
+        const [user] = await db.execute('SELECT phone FROM users WHERE id = ?', [req.user.id]);
         
-        if (userRows.length === 0 || !userRows[0].phone) {
-            return res.json([]); 
-        }
+        if (user.length === 0 || !user[0].phone) return res.json([]);
 
-        const userPhone = userRows[0].phone;
-
-        const [complaints] = await db.execute(
+        const [rows] = await db.execute(
             'SELECT * FROM complaints WHERE phone = ? ORDER BY date_submitted DESC', 
-            [userPhone]
+            [user[0].phone]
         );
-        
-        res.json(complaints);
+        res.json(rows);
     } catch (err) {
-        console.error('❌ Error fetching user complaints:', err);
-        res.status(500).json({ message: 'فشل في جلب قائمة الشكاوى الخاصة بك.' });
+        res.status(500).json({ message: 'حدث خطأ أثناء جلب شكاواك' });
     }
 });
-// ✅ أضف هذا الكود هنا (تقريباً سطر 243) ليتمكن الموظف من جلب البيانات
-app.get('/api/complaints', authenticateToken, async (req, res) => {
-    try {
-        const userRole = req.user.role ? req.user.role.toLowerCase() : '';
-        
-        // التحقق: الموظف والمدير فقط مسموح لهما برؤية كل الشكاوى
-        if (userRole !== 'employee' && userRole !== 'admin') {
-            return res.status(403).json({ message: 'غير مصرح لك بالوصول لهذه البيانات.' });
-        }
 
+/**
+ * جلب جميع الشكاوى (للموظفين والمديرين فقط)
+ * هذا المسار تم تحديثه لمعالجة مشكلة الـ 403
+ */
+app.get('/api/complaints', authenticateToken, checkStaffRole, async (req, res) => {
+    try {
+        console.log(`🔍 Staff Member ${req.user.email} is fetching all complaints.`);
+        
         const [rows] = await db.execute('SELECT * FROM complaints ORDER BY date_submitted DESC');
         res.json(rows);
     } catch (err) {
-        console.error('❌ Error fetching complaints:', err);
-        res.status(500).json({ message: 'فشل في جلب قائمة الشكاوى' });
+        console.error('❌ Staff Complaints Fetch Error:', err);
+        res.status(500).json({ message: 'فشل السيرفر في جلب البيانات' });
     }
 });
+
+/**
+ * جلب تفاصيل شكوى محددة
+ */
 app.get('/api/complaints/:id', authenticateToken, async (req, res) => {
-    const userRole = req.user.role ? req.user.role.toLowerCase() : '';
-    const userId = req.user.id;
+    const { role, id: userId } = req.user;
     const complaintId = req.params.id; 
     
     try {
         const [rows] = await db.execute('SELECT * FROM complaints WHERE id = ?', [complaintId]);
-        
-        if (rows.length === 0) {
-            return res.status(404).json({ message: 'الشكوى المطلوبة غير موجودة.' });
-        }
+        if (rows.length === 0) return res.status(404).json({ message: 'الشكوى غير موجودة' });
 
         const complaint = rows[0];
 
-        if (userRole === 'admin' || userRole === 'employee') {
-            return res.json(complaint);
-        } 
-        else if (userRole === 'citizen') {
-            const [userRows] = await db.execute('SELECT phone FROM users WHERE id = ?', [userId]);
-            const userPhone = userRows[0]?.phone;
-
-            if (userPhone && complaint.phone === userPhone) {
-                return res.json(complaint);
-            } else {
-                return res.status(403).json({ message: 'غير مصرح لك بالوصول لشكوى لا تخصك.' });
+        // التحقق من الملكية إذا كان المستخدم مواطناً
+        if (role === 'citizen') {
+            const [u] = await db.execute('SELECT phone FROM users WHERE id = ?', [userId]);
+            if (u[0].phone !== complaint.phone) {
+                return res.status(403).json({ message: 'غير مصرح لك بعرض شكوى لا تخصك' });
             }
-        } else {
-            return res.status(403).json({ message: 'غير مصرح لك بالوصول.' });
         }
+
+        res.json(complaint);
     } catch (err) {
-        console.error('❌ Error fetching complaint:', err);
-        res.status(500).json({ message: 'فشل في جلب بيانات الشكوى.' });
+        res.status(500).json({ message: 'خطأ في جلب تفاصيل الشكوى' });
     }
 });
 
-app.put('/api/complaints/:id/status', authenticateToken, async (req, res) => {
-    const complaintId = req.params.id; 
-    const { status } = req.body; 
-
-    const userRole = req.user.role ? req.user.role.toLowerCase() : '';
-
-    if (userRole !== 'employee' && userRole !== 'admin') {
-        return res.status(403).json({ message: 'غير مصرح لك بالوصول لهذه العملية.' });
-    }
-
-    if (!status) return res.status(400).json({ message: "حالة الشكوى مطلوبة." });
+/**
+ * تحديث حالة الشكوى (للموظفين والمديرين)
+ */
+app.put('/api/complaints/:id/status', authenticateToken, checkStaffRole, async (req, res) => {
+    const { status } = req.body;
+    const complaintId = req.params.id;
 
     const validStatuses = ['new', 'in_progress', 'completed', 'refused'];
     if (!validStatuses.includes(status)) {
-        return res.status(400).json({ message: `قيمة الحالة غير صالحة: ${status}.` });
+        return res.status(400).json({ message: 'الحالة المدخلة غير صحيحة' });
     }
 
     try {
         const [result] = await db.execute(
-            `UPDATE complaints SET status = ?, date_updated = NOW() WHERE id = ?`,
-            [status, complaintId] 
+            'UPDATE complaints SET status = ?, date_updated = NOW() WHERE id = ?',
+            [status, complaintId]
         );
 
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: "الشكوى غير موجودة أو لم يتم تحديثها." });
-        }
+        if (result.affectedRows === 0) return res.status(404).json({ message: 'الشكوى غير موجودة' });
 
-        res.status(200).json({ message: "تم تحديث حالة الشكوى بنجاح.", newStatus: status });
-
+        res.json({ message: 'تم تحديث الحالة بنجاح', newStatus: status });
     } catch (err) {
-        console.error('❌ Database Update Error:', err);
-        res.status(500).json({ message: "حدث خطأ داخلي في الخادم." });
+        res.status(500).json({ message: 'فشل تحديث الحالة' });
     }
 });
+
+// --- ROUTES: متابعة الشكوى بدون تسجيل دخول (Follow-up) ---
 
 app.get('/api/follow-up/:refNumber', async (req, res) => {
     let refNumber = req.params.refNumber;
     let complaintId = refNumber; 
 
-    const match = refNumber.match(/TIC_\d+_\d+_(\d+)/);
-    if (match && match[1]) {
-        complaintId = match[1]; 
-    } else if (refNumber.startsWith('TIC_') && !match) {
-        return res.status(400).json({ message: 'صيغة الرقم المرجعي غير صحيحة. يجب أن تكون TIC_M_A_S' });
-    }
+    // منطق استخراج الـ ID إذا كان الرقم المرجعي بصيغة TIC_...
+    const match = refNumber.match(/TIC_.*?_(\d+)$/);
+    if (match) complaintId = match[1];
     
     try {
-        const [rows] = await db.execute('SELECT * FROM complaints WHERE id=?', [complaintId]);
+        const [rows] = await db.execute('SELECT id, status, complaint_type, date_submitted FROM complaints WHERE id=?', [complaintId]);
         
-        if (rows.length === 0) {
-            return res.status(404).json({ message: 'الشكوى غير موجودة' });
-        }
+        if (rows.length === 0) return res.status(404).json({ message: 'لم يتم العثور على شكوى بهذا الرقم المرجعي' });
         
         res.json(rows[0]); 
     } catch (err) {
-        console.error('❌ Follow-up Error:', err);
-        res.status(500).json({ message: 'حدث خطأ في السيرفر' });
+        res.status(500).json({ message: 'خطأ في نظام المتابعة' });
     }
 });
 
-app.get('/api/employees', async (req, res) => {
+// --- ROUTES: إدارة الموظفين (Employee Management - Admin Only) ---
+
+app.get('/api/employees', authenticateToken, checkAdminRole, async (req, res) => {
     try {
         const sql = `
             SELECT 
-                users.id, 
-                users.full_name AS name, 
-                users.email, 
-                users.phone,
-                users.role,
-                employees.department,
-                employees.employee_code
-            FROM users 
-            LEFT JOIN employees ON users.employee_id = employees.employee_id 
-            WHERE users.role = "Employee" OR users.role = "Admin" 
-            ORDER BY users.full_name ASC
+                u.id, u.full_name AS name, u.email, u.phone, u.role,
+                e.department, e.employee_code
+            FROM users u
+            LEFT JOIN employees e ON u.employee_id = e.employee_id 
+            WHERE LOWER(u.role) IN ('employee', 'admin')
+            ORDER BY u.full_name ASC
         `;
-        
         const [rows] = await db.execute(sql);
         res.json(rows);
     } catch (err) {
-        console.error("❌ Error fetching employees:", err);
-        res.status(500).json({ message: "Internal Server Error" });
-    }
-});
-
-app.get('/api/employees/:id', authenticateToken, checkAdminRole, async (req, res) => {
-    const userId = req.params.id;
-    try {
-        const sql = `
-            SELECT 
-                users.id, 
-                users.full_name AS name, 
-                users.email, 
-                users.phone,
-                users.employee_id,
-                employees.employee_code AS code,
-                employees.department
-            FROM users 
-            LEFT JOIN employees ON users.employee_id = employees.employee_id 
-            WHERE users.id = ?
-        `;
-        const [rows] = await db.execute(sql, [userId]);
-        
-        if (rows.length === 0) {
-            return res.status(404).json({ message: 'الموظف غير موجود.' });
-        }
-        res.json(rows[0]);
-    } catch (err) {
-        console.error('❌ Error fetching single employee:', err);
-        res.status(500).json({ message: 'فشل في جلب بيانات الموظف.' });
+        res.status(500).json({ message: "فشل جلب قائمة الموظفين" });
     }
 });
 
 app.post('/api/employees', authenticateToken, checkAdminRole, async (req, res) => {
-    const { name, id, email, password, department, phone } = req.body; 
+    const { name, id: employeeCode, email, password, department, phone } = req.body; 
 
-    if (!name || !id || !email || !password || !department || !phone) {
-        return res.status(400).json({ message: 'جميع حقول الموظف مطلوبة.' });
+    if (!name || !employeeCode || !email || !password) {
+        return res.status(400).json({ message: 'يرجى إكمال كافة بيانات الموظف' });
     }
 
     const connection = await db.getConnection();
     try {
         await connection.beginTransaction();
 
-        const [existingUser] = await connection.execute('SELECT email FROM users WHERE email=?', [email]);
-        const [existingEmp] = await connection.execute('SELECT employee_code FROM employees WHERE employee_code=?', [id]);
-        
-        if (existingUser.length > 0 || existingEmp.length > 0) {
+        const [exists] = await connection.execute('SELECT id FROM users WHERE email=?', [email]);
+        if (exists.length > 0) {
             await connection.rollback();
-            return res.status(400).json({ message: 'البريد الإلكتروني أو الرقم الوظيفي موجود مسبقاً.' });
+            return res.status(400).json({ message: 'البريد الإلكتروني مسجل مسبقاً' });
         }
 
-        const finalPassword = await bcrypt.hash(password, 10);
+        const hashed = await bcrypt.hash(password, 10);
         
+        // 1. إضافة سجل في جدول الموظفين
         const [empResult] = await connection.execute(
             'INSERT INTO employees (full_name, employee_code, department) VALUES (?, ?, ?)',
-            [name, id, department] 
+            [name, employeeCode, department] 
         );
 
-        const realEmployeeId = empResult.insertId;
-
-        const [userResult] = await connection.execute(
+        // 2. إضافة سجل في جدول المستخدمين
+        await connection.execute(
             'INSERT INTO users (full_name, email, password, role, employee_id, phone) VALUES (?, ?, ?, "Employee", ?, ?)',
-            [name, email, finalPassword, realEmployeeId, phone] 
+            [name, email, hashed, employeeCode, phone] 
         );
 
         await connection.commit();
-        res.status(201).json({ message: 'تم إضافة الموظف بنجاح.', userId: userResult.insertId });
+        res.status(201).json({ message: 'تم إضافة الموظف وتفعيل حسابه بنجاح' });
 
     } catch (err) {
         await connection.rollback();
-        console.error('❌ Employee Add Error:', err);
-        res.status(500).json({ message: 'فشل في إضافة الموظف: ' + err.message });
-    } finally {
-        connection.release();
-    }
-});
-
-app.put('/api/employees/:id', authenticateToken, checkAdminRole, async (req, res) => {
-    const userId = req.params.id;
-    const { name, id, email, department, phone, password } = req.body; 
-
-    if (!name || !id || !email || !department || !phone) {
-        return res.status(400).json({ message: 'جميع الحقول مطلوبة.' });
-    }
-
-    const connection = await db.getConnection();
-    try {
-        await connection.beginTransaction();
-
-        let userUpdateQuery = 'UPDATE users SET full_name=?, email=?, phone=?';
-        let userParams = [name, email, phone];
-
-        if (password && password.trim() !== "") {
-            const hashedPassword = await bcrypt.hash(password, 10);
-            userUpdateQuery += ', password=?';
-            userParams.push(hashedPassword);
-        }
-
-        userUpdateQuery += ' WHERE id=?';
-        userParams.push(userId);
-
-        await connection.execute(userUpdateQuery, userParams);
-
-        const [userRows] = await connection.execute('SELECT employee_id FROM users WHERE id=?', [userId]);
-        const employeeRefId = userRows[0].employee_id;
-
-        if (employeeRefId) {
-            await connection.execute(
-                'UPDATE employees SET full_name=?, employee_code=?, department=? WHERE employee_id=?',
-                [name, id, department, employeeRefId]
-            );
-        }
-
-        await connection.commit();
-        res.json({ message: 'تم تحديث بيانات الموظف بنجاح.' });
-
-    } catch (err) {
-        await connection.rollback();
-        console.error('❌ Employee Update Error:', err);
-        res.status(500).json({ message: 'فشل في تحديث بيانات الموظف.' });
+        console.error('❌ Transaction Error:', err);
+        res.status(500).json({ message: 'حدث خطأ أثناء إضافة الموظف' });
     } finally {
         connection.release();
     }
 });
 
 app.delete('/api/employees/:id', authenticateToken, checkAdminRole, async (req, res) => {
-    const userId = req.params.id;
     try {
-        const [result] = await db.execute('DELETE FROM users WHERE id=? AND role != "Admin"', [userId]);
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ message: 'الموظف غير موجود أو لا يمكن حذفه.' });
-        }
-        res.json({ message: 'تم حذف الموظف بنجاح.' });
+        const [result] = await db.execute('DELETE FROM users WHERE id=? AND role != "Admin"', [req.params.id]);
+        if (result.affectedRows === 0) return res.status(404).json({ message: 'الموظف غير موجود أو لا يمكن حذفه' });
+        res.json({ message: 'تم حذف حساب الموظف بنجاح' });
     } catch (err) {
-        console.error('❌ Employee Delete Error:', err);
-        res.status(500).json({ message: 'فشل في حذف الموظف.' });
+        res.status(500).json({ message: 'فشل حذف الموظف' });
     }
 });
 
-// ✅ [محدث] نقطة اتصال الإحصائيات (تدعم الرسوم البيانية)
+// --- ROUTES: الإحصائيات ولوحة التحكم (Dashboard Stats) ---
+
 app.get('/api/admin/stats', authenticateToken, checkAdminRole, async (req, res) => {
     try {
-        const [empResult] = await db.execute('SELECT COUNT(*) as count FROM users WHERE role = "Employee"');
-        const [complaintResult] = await db.execute('SELECT COUNT(*) as count FROM complaints WHERE status IN ("new", "in_progress")');
-        const [deptResult] = await db.execute('SELECT COUNT(DISTINCT department) as count FROM employees');
+        // حساب الإجماليات
+        const [uCount] = await db.execute('SELECT COUNT(*) as count FROM users WHERE LOWER(role) = "employee"');
+        const [cCount] = await db.execute('SELECT COUNT(*) as count FROM complaints WHERE status IN ("new", "in_progress")');
+        const [dCount] = await db.execute('SELECT COUNT(DISTINCT department) as count FROM employees');
 
-        // إحصائيات الرسوم البيانية (Charts)
-        const [typeRows] = await db.execute('SELECT complaint_type as label, COUNT(*) as total FROM complaints GROUP BY complaint_type');
-        const [perfRows] = await db.execute(`
+        // إحصائيات للرسم البياني
+        const [types] = await db.execute('SELECT complaint_type as label, COUNT(*) as total FROM complaints GROUP BY complaint_type');
+        
+        // أداء الأسبوع الأخير
+        const [perf] = await db.execute(`
             SELECT DATE_FORMAT(date_submitted, '%W') as day, COUNT(*) as count 
             FROM complaints 
             WHERE date_submitted >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
-            GROUP BY day 
-            ORDER BY date_submitted ASC
+            GROUP BY day ORDER BY date_submitted ASC
         `);
 
         res.json({
-            employees: empResult[0].count,
-            active_complaints: complaintResult[0].count,
-            departments: deptResult[0].count,
-            departments_labels: typeRows.map(r => r.label),
-            departments_data: typeRows.map(r => r.total),
-            performance_labels: perfRows.map(r => r.day),
-            performance_data: perfRows.map(r => r.count)
+            employees: uCount[0].count,
+            active_complaints: cCount[0].count,
+            departments: dCount[0].count,
+            departments_labels: types.map(r => r.label),
+            departments_data: types.map(r => r.total),
+            performance_labels: perf.map(r => r.day),
+            performance_data: perf.map(r => r.count)
         });
 
     } catch (err) {
-        console.error("❌ Error fetching admin stats:", err);
-        res.status(500).json({ message: "فشل في جلب الإحصائيات" });
+        res.status(500).json({ message: "فشل جلب إحصائيات الإدارة" });
     }
 });
 
-app.get('/api/admin/complaints', authenticateToken, checkAdminRole, async (req, res) => {
+app.get('/api/admin/notifications/unread', authenticateToken, checkStaffRole, async (req, res) => {
     try {
-        const [rows] = await db.execute('SELECT * FROM complaints ORDER BY date_submitted DESC');
-        res.json(rows);
+        const [rows] = await db.execute('SELECT COUNT(*) as count FROM complaints WHERE status = "new"');
+        res.json({ count: rows[0].count });
     } catch (err) {
-        console.error('❌ Error fetching all complaints:', err);
-        res.status(500).json({ message: 'فشل في جلب قائمة الشكاوى للمدير' });
+        res.status(500).json({ message: "خطأ في الإشعارات" });
     }
 });
+
+// --- تشغيل السيرفر ---
 
 const PORT = process.env.PORT || 3000;
-// ✅ جلب عدد الشكاوى الجديدة غير المقروءة للإشعارات
-app.get('/api/admin/notifications/unread', authenticateToken, checkAdminRole, async (req, res) => {
-    try {
-        // نعد فقط الشكاوى التي حالتها 'new'
-        const [rows] = await db.execute('SELECT COUNT(*) as unreadCount FROM complaints WHERE status = "new"');
-        
-        res.json({ count: rows[0].unreadCount });
-    } catch (err) {
-        console.error("❌ Notification Error:", err);
-        res.status(500).json({ message: "فشل جلب الإشعارات" });
-    }
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`
+    ============================================================
+    🚀 Alomari Help Desk Server is running!
+    📡 URL: http://localhost:${PORT}
+    📅 System Time: ${new Date().toLocaleString()}
+    🔒 Security: JWT & Role-Based Access Control Active
+    ============================================================
+    `);
 });
-app.listen(PORT, '0.0.0.0', () => console.log(`🚀 Server running on port ${PORT}`));
