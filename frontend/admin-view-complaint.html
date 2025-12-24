@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تفاصيل الشكوى - لوحة التحكم</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="admin-view-complaint.css">
+</head>
+<body>
+
+    <div class="details-container">
+        <div class="complaint-card">
+            <h2><i class="fas fa-file-alt"></i> تفاصيل الشكوى رقم <span id="display-id">--</span></h2>
+            
+            <div class="info-grid">
+                <div class="field-box">
+                    <span class="label">اسم المشتكي</span>
+                    <span class="value" id="full_name">جاري التحميل...</span>
+                </div>
+                <div class="field-box">
+                    <span class="label">رقم الهاتف</span>
+                    <span class="value" id="phone">--</span>
+                </div>
+                <div class="field-box">
+                    <span class="label">المحافظة</span>
+                    <span class="value" id="province">--</span>
+                </div>
+                <div class="field-box">
+                    <span class="label">المنطقة</span>
+                    <span class="value" id="area">--</span>
+                </div>
+                <div class="field-box full-width">
+                    <span class="label">نوع الشكوى</span>
+                    <span class="value" id="complaint_type">--</span>
+                </div>
+                <div class="field-box full-width">
+                    <span class="label">وصف الشكوى</span>
+                    <div class="description-box" id="description">--</div>
+                </div>
+                <div class="field-box">
+                    <span class="label">تاريخ التقديم</span>
+                    <span class="value" id="created_at">--</span>
+                </div>
+                <div class="field-box">
+                    <span class="label">الحالة</span>
+                    <span class="value" id="status">--</span>
+                </div>
+            </div>
+
+            <div style="text-align: left; margin-top: 20px;">
+                <a href="admin-dashboard.html" class="back-btn"><i class="fas fa-arrow-left"></i> عودة للوحة التحكم</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="admin-view-complaint.js"></script>
+</body>
+</html>

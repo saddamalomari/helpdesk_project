@@ -1,0 +1,75 @@
+:root {
+    --gold: #bf953f;
+    --dark-bg: #0f0f1a;
+    --card-bg: #1a1a2e;
+    --text: #e0e0e0;
+}
+
+body {
+    background-color: var(--dark-bg);
+    color: var(--text);
+    font-family: 'Segoe UI', sans-serif;
+    margin: 0;
+    padding: 20px;
+    direction: rtl;
+}
+
+.details-container {
+    max-width: 800px;
+    margin: 40px auto;
+}
+
+.complaint-card {
+    background: var(--card-bg);
+    border: 1px solid var(--gold);
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+h2 {
+    color: var(--gold);
+    border-bottom: 2px solid var(--gold);
+    padding-bottom: 10px;
+    margin-bottom: 30px;
+}
+
+.info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.field-box {
+    background: rgba(255,255,255,0.03);
+    padding: 15px;
+    border-radius: 8px;
+    border-right: 3px solid var(--gold);
+}
+
+.full-width { grid-column: 1 / -1; }
+
+.label {
+    display: block;
+    color: var(--gold);
+    font-size: 0.85rem;
+    margin-bottom: 5px;
+}
+
+.value { font-size: 1.1rem; }
+
+.description-box {
+    margin-top: 10px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+
+.back-btn {
+    background: linear-gradient(135deg, #bf953f, #b38728);
+    color: #000;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-weight: bold;
+    display: inline-block;
+}
