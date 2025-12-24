@@ -3,50 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>إدارة كافة الشكاوى</title>
+    <title>سجل الشكاوى - وكالة العمري</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="admin-dashboard.css">
-    <style>
-        .filter-section { margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap; }
-        .filter-section select { padding: 8px; border-radius: 5px; background: #242b3d; color: white; border: 1px solid var(--gold-start); }
-    </style>
 </head>
 <body>
     <header class="header">
         <div class="header-content">
-            <h1><i class="fas fa-list"></i> إدارة كافة الشكاوى</h1>
-            <a href="admin-dashboard.html" class="logout-btn"><i class="fas fa-arrow-right"></i> العودة للوحة التحكم</a>
+            <h1><i class="fas fa-list-ul"></i> سجل الشكاوى الكامل</h1>
+            <a href="admin-dashboard.html" class="logout-btn" style="background: rgba(255,255,255,0.1); text-decoration: none;">
+                <i class="fas fa-arrow-right"></i> العودة للرئيسية
+            </a>
         </div>
     </header>
 
     <main class="dashboard-container">
         <section class="content-card">
             <div class="card-header">
-                <h3 class="gold-gradient-text">📋 جميع الشكاوى المستلمة</h3>
-                <div class="filter-section">
-                    <select id="filter-status">
-                        <option value="all">جميع الحالات</option>
-                        <option value="new">جديدة</option>
-                        <option value="in-progress">قيد المعالجة</option>
-                        <option value="completed">مكتملة</option>
-                    </select>
+                <h3 class="gold-gradient-text">📋 كافة الشكاوى في النظام</h3>
+                <div class="search-box">
+                    <input type="text" id="search-complaint" placeholder="بحث برقم الشكوى أو الاسم...">
+                    <i class="fas fa-search"></i>
                 </div>
             </div>
-
+            
             <div class="table-responsive">
                 <table class="modern-table">
                     <thead>
                         <tr>
                             <th>رقم الشكوى</th>
-                            <th>المواطن</th>
-                            <th>نوع الشكوى</th>
-                            <th>التاريخ</th>
+                            <th>اسم المشتكي</th>
+                            <th>المنطقة</th>
                             <th>الحالة</th>
-                            <th>إجراءات</th>
+                            <th>التاريخ</th>
+                            <th>الإجراءات</th>
                         </tr>
                     </thead>
-                    <tbody id="all-complaints-tbody">
-                        <tr><td colspan="6" style="text-align:center;">جاري جلب البيانات...</td></tr>
+                    <tbody id="complaints-list-tbody">
+                        <tr><td colspan="6" style="text-align:center;">جاري جلب البيانات من السيرفر...</td></tr>
                     </tbody>
                 </table>
             </div>
