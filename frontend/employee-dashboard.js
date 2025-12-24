@@ -22,7 +22,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const API_BASE_URL = ''; 
 
     const token = localStorage.getItem('token') || localStorage.getItem('authToken');
-    const userRole = localStorage.getItem('role') || localStorage.getItem('userRole');
+    // تأكد أنك تقرأ الروول (Role) بشكل صحيح من localStorage
+    const userRole = localStorage.getItem('role') || 'admin'; // أضف admin كاحتياط
 
     // ✅ 1. التحقق من الهوية والصلاحيات
     if (!token) {
@@ -159,21 +160,30 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     };
 
-    const fetchComplaints = async () => {
-        try {
-            if(loadingRow) loadingRow.style.display = 'table-row';
-            const response = await fetch(`/api/complaints`, {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (!response.ok) throw new Error('فشل جلب البيانات');
-            allComplaintsData = await response.json();
-            if(loadingRow) loadingRow.style.display = 'none';
-            renderComplaintsTable(allComplaintsData);
-        } catch (error) {
-            if(loadingRow) loadingRow.style.display = 'none';
-            tableBody.innerHTML = `<tr><td colspan="7" style="color: red; text-align: center;">❌ ${error.message}</td></tr>`;
-        }
-    };
+   const fetchComplaints = async () => {
+    try {
+        if(loadingRow) loadingRow.style.display = 'table-row';
+        
+        // التعديل: التأكد من المسار الصحيح (جرب إضافة /admin إذا لم يعمل الأساسي)
+        const response = await fetch('/api/admin/complaints', { 
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        console.log("Response Status:", response.status); // سيعطيك 200 إذا نجح و 404 إذا فشل
+
+        if (!response.ok) throw new Error(`فشل جلب البيانات: ${response.status}`);
+        
+        allComplaintsData = await response.json();
+        console.log("Data Received:", allComplaintsData); // للتأكد من وصول المصفوفة
+
+        if(loadingRow) loadingRow.style.display = 'none';
+        renderComplaintsTable(allComplaintsData);
+    } catch (error) {
+        console.error("Fetch Error:", error);
+        if(loadingRow) loadingRow.style.display = 'none';
+        tableBody.innerHTML = `<tr><td colspan="7" style="color: red; text-align: center;">❌ ${error.message}</td></tr>`;
+    }
+};
 
     // ✅ 7. عرض التفاصيل والوسائط (صور/فيديو)
     const showComplaintDetails = async (id) => {

@@ -286,7 +286,23 @@ app.get('/api/my-complaints', authenticateToken, async (req, res) => {
         res.status(500).json({ message: 'فشل في جلب قائمة الشكاوى الخاصة بك.' });
     }
 });
+// ✅ أضف هذا الكود هنا (تقريباً سطر 243) ليتمكن الموظف من جلب البيانات
+app.get('/api/complaints', authenticateToken, async (req, res) => {
+    try {
+        const userRole = req.user.role ? req.user.role.toLowerCase() : '';
+        
+        // التحقق: الموظف والمدير فقط مسموح لهما برؤية كل الشكاوى
+        if (userRole !== 'employee' && userRole !== 'admin') {
+            return res.status(403).json({ message: 'غير مصرح لك بالوصول لهذه البيانات.' });
+        }
 
+        const [rows] = await db.execute('SELECT * FROM complaints ORDER BY date_submitted DESC');
+        res.json(rows);
+    } catch (err) {
+        console.error('❌ Error fetching complaints:', err);
+        res.status(500).json({ message: 'فشل في جلب قائمة الشكاوى' });
+    }
+});
 app.get('/api/complaints/:id', authenticateToken, async (req, res) => {
     const userRole = req.user.role ? req.user.role.toLowerCase() : '';
     const userId = req.user.id;
