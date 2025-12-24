@@ -1,5 +1,5 @@
 /* =========================================
-   1. المتغيرات والألوان (تم تحسين التباين)
+   1. المتغيرات والوضع الليلي
    ========================================= */
 :root {
     --bg-color: #f4f7f6;
@@ -8,15 +8,10 @@
     --text-primary: #2c3e50;
     --text-secondary: #7f8c8d;
     --border-color: #eeeeee;
-    
     --gold-start: #bf953f;
     --gold-mid: #fcf6ba;
-    --gold-end: #b38728;
     --gold-gradient: linear-gradient(135deg, #bf953f, #aa771c);
-    
     --danger: #e74c3c;
-    --success: #2ecc71;
-    --info: #3498db;
     --shadow: 0 5px 15px rgba(0,0,0,0.05);
 }
 
@@ -26,17 +21,16 @@
     --text-primary: #e0e0e0;
     --text-secondary: #b0b0b0;
     --border-color: #2a2a3a;
-    --shadow: 0 5px 20px rgba(0,0,0,0.4);
+    --shadow: 0 10px 30px rgba(0,0,0,0.4);
 }
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: var(--bg-color);
     margin: 0;
-    padding: 0;
     direction: rtl;
     color: var(--text-primary);
-    transition: background-color 0.4s ease, color 0.4s ease;
+    transition: background-color 0.4s ease;
 }
 
 /* =========================================
@@ -44,10 +38,7 @@ body {
    ========================================= */
 .header {
     background: var(--dark-navy);
-    color: white;
     padding: 12px 0;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    margin-bottom: 30px;
     border-bottom: 2px solid var(--gold-start);
     position: sticky;
     top: 0;
@@ -72,8 +63,14 @@ body {
 }
 
 /* =========================================
-   3. البطاقات والإحصائيات (Stats)
+   3. الشبكة والبطاقات (Layout & Cards)
    ========================================= */
+.dashboard-container {
+    max-width: 1200px;
+    margin: 30px auto;
+    padding: 0 20px;
+}
+
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -87,39 +84,15 @@ body {
     display: flex;
     align-items: center;
     box-shadow: var(--shadow);
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    transition: transform 0.3s;
 }
 
-.clickable-card {
-    cursor: pointer;
-    border: 2px solid transparent;
-}
+.stat-card:hover { transform: translateY(-5px); }
 
-.clickable-card:hover {
-    transform: scale(1.02);
-    border-color: var(--gold-start);
-}
-
-.dark-card {
-    background: var(--dark-navy);
-    color: white;
-    border: 1px solid var(--gold-start);
-}
-
-.stat-card .icon {
-    width: 60px;
-    height: 60px;
-    border-radius: 12px;
-    background: rgba(191, 149, 63, 0.15);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.8rem;
-    margin-left: 15px;
-}
+.dark-card { background: var(--dark-navy); color: white; border: 1px solid var(--gold-start); }
 
 /* =========================================
-   4. الجداول والنماذج (Tables & Forms)
+   4. النماذج والحقول (Forms & Inputs)
    ========================================= */
 .admin-grid-layout {
     display: grid;
@@ -127,11 +100,9 @@ body {
     gap: 25px;
 }
 
-@media (max-width: 992px) {
-    .admin-grid-layout { grid-template-columns: 1fr; }
-}
+@media (max-width: 992px) { .admin-grid-layout { grid-template-columns: 1fr; } }
 
-.content-card {
+.form-card, .content-card, .modal-content {
     background: var(--card-white);
     padding: 25px;
     border-radius: 15px;
@@ -147,50 +118,38 @@ body {
 
 .input-group label {
     font-size: 0.9rem;
-    margin-bottom: 5px;
-    color: var(--gold-start);
     font-weight: bold;
+    margin-bottom: 8px;
+    color: var(--gold-start);
 }
 
+/* توحيد تنسيق الحقول */
 input, select, textarea {
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid var(--border-color);
+    padding: 12px;
+    border-radius: 10px;
+    border: 2px solid var(--border-color);
     background: #f9f9f9;
     color: var(--text-primary);
-    transition: 0.3s;
+    transition: all 0.3s;
+    font-family: inherit;
 }
 
-[data-theme="dark"] input, 
-[data-theme="dark"] select {
+input:focus, select:focus {
+    outline: none;
+    border-color: var(--gold-start);
+    box-shadow: 0 0 0 3px rgba(191, 149, 63, 0.1);
+    background: #fff;
+}
+
+[data-theme="dark"] input, [data-theme="dark"] select {
     background: #1e1e2f;
     border-color: #333;
 }
 
-.badge {
-    padding: 5px 10px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    background: rgba(191, 149, 63, 0.1);
-    color: var(--gold-start);
-    border: 1px solid var(--gold-start);
-}
-
 /* =========================================
-   5. أزرار التحكم (Buttons)
+   5. الأزرار (Buttons)
    ========================================= */
-.icon-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 1.1rem;
-    padding: 5px;
-    transition: 0.2s;
-}
-
-.icon-btn:hover { transform: scale(1.2); }
-
-.gold-btn {
+.gold-btn, button[type="submit"] {
     width: 100%;
     padding: 12px;
     background: var(--gold-gradient);
@@ -200,15 +159,30 @@ input, select, textarea {
     font-weight: bold;
     cursor: pointer;
     transition: 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
 }
 
-.gold-btn:hover {
+.gold-btn:hover, button[type="submit"]:hover {
     filter: brightness(1.1);
-    box-shadow: 0 4px 15px rgba(191, 149, 63, 0.4);
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(191, 149, 63, 0.3);
+}
+
+.logout-btn {
+    background: var(--danger);
+    color: white;
+    padding: 8px 15px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-weight: bold;
 }
 
 /* =========================================
-   6. الإشعارات والوضع الليلي
+   6. الإشعارات والتحسينات
    ========================================= */
 .notify-badge {
     background: var(--danger);
@@ -220,17 +194,11 @@ input, select, textarea {
 }
 
 @keyframes pulse {
-    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(231, 76, 60, 0.4); }
-    70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(231, 76, 60, 0); }
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
     100% { transform: scale(1); }
 }
 
-.logout-btn {
-    background: #e74c3c;
-    color: white;
-    padding: 8px 15px;
-    border-radius: 6px;
-    border: none;
-    cursor: pointer;
-    font-weight: bold;
-}
+.modern-table { width: 100%; border-collapse: collapse; }
+.modern-table th { text-align: right; padding: 12px; border-bottom: 2px solid var(--border-color); }
+.modern-table td { padding: 12px; border-bottom: 1px solid var(--border-color); }
