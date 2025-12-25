@@ -1,42 +1,59 @@
-document.addEventListener('DOMContentLoaded', async function() {
-    
-    // ✅ التعديل الأول: جعل الرابط نسبياً لضمان العمل على Render
-    const API_BASE_URL = ''; 
-    
-    // البحث عن التوكن لضمان استمرار الجلسة
-    const token = localStorage.getItem('token') || 
-                  localStorage.getItem('userToken') || 
-                  localStorage.getItem('authToken');
+document.addEventListener('DOMContentLoaded', async function () {
+
+    /* =========================
+       🔐 Session & Token
+    ========================= */
+    const token =
+        localStorage.getItem('token') ||
+        localStorage.getItem('userToken') ||
+        localStorage.getItem('authToken');
 
     if (!token) {
-        console.warn("لم يتم العثور على توكن، قد تحتاج لتسجيل الدخول.");
+        console.warn('لم يتم العثور على توكن، قد تحتاج لتسجيل الدخول.');
     }
 
-    // عرض التاريخ الحالي
+    /* =========================
+       📅 Current Date
+    ========================= */
     const dateBox = document.getElementById('current-date');
     if (dateBox) {
-        const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        dateBox.textContent = new Date().toLocaleDateString('ar-EG', dateOptions);
+        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+        dateBox.textContent = new Date().toLocaleDateString('ar-EG', options);
     }
 
-    // --- 1. التحكم في القائمة الجانبية (Sidebar) ---
+    /* =========================
+       🍔 Sidebar Toggle
+    ========================= */
     const sidebar = document.getElementById('sidebar');
     const toggleBtn = document.getElementById('toggle-btn');
-    if(toggleBtn && sidebar) {
-        toggleBtn.addEventListener('click', () => sidebar.classList.toggle('active'));
-    }
 
-    // --- 2. حل مشكلة قائمة "تواصل معنا" ---
-    const contactToggle = document.getElementById('contact-toggle');
-    const contactMenu = document.getElementById('contact-menu');
-    if (contactToggle && contactMenu) {
-        contactToggle.addEventListener('click', function(e) {
-            e.preventDefault();
-            contactMenu.classList.toggle('active'); // CSS الخاص بك يستخدم كلاس active لإظهارها
+    if (toggleBtn && sidebar) {
+        toggleBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
         });
     }
 
-    // --- 3. التحكم في نافذة "تغيير كلمة المرور" (فتح وإغلاق) ---
+    /* =========================
+       📞 Contact Menu
+    ========================= */
+    const contactToggle = document.getElementById('contact-toggle');
+    const contactMenu = document.getElementById('contact-menu');
+
+    if (contactMenu) {
+        contactMenu.classList.remove('active'); // إغلاق إجباري عند التحميل
+    }
+
+    if (contactToggle && contactMenu) {
+        contactToggle.addEventListener('click', (e) => {
+            e.preventDefault();
+            contactMenu.classList.toggle('active');
+            contactToggle.classList.toggle('active');
+        });
+    }
+
+    /* =========================
+       🔐 Change Password Modal
+    ========================= */
     const changePassToggle = document.getElementById('change-password-toggle');
     const changePassModal = document.getElementById('change-password-modal');
     const closePassModal = document.getElementById('close-pass-modal');
@@ -44,17 +61,25 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (changePassToggle && changePassModal) {
         changePassToggle.addEventListener('click', (e) => {
             e.preventDefault();
-            changePassModal.style.display = 'flex'; // إظهار النافذة
+            changePassModal.style.display = 'flex';
         });
     }
 
-    if (closePassModal) {
+    if (closePassModal && changePassModal) {
         closePassModal.addEventListener('click', () => {
-            changePassModal.style.display = 'none'; // إغلاق النافذة
+            changePassModal.style.display = 'none';
         });
     }
 
-    // --- 4. التحكم في نافذة "الشات بوت" (فتح وإغلاق) ---
+    window.addEventListener('click', (e) => {
+        if (e.target === changePassModal) {
+            changePassModal.style.display = 'none';
+        }
+    });
+
+    /* =========================
+       🤖 Chatbot
+    ========================= */
     const chatbotBtn = document.getElementById('chatbot-btn');
     const chatbotWindow = document.getElementById('chatbot-window');
     const closeChat = document.getElementById('close-chat');
@@ -62,59 +87,66 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (chatbotBtn && chatbotWindow) {
         chatbotBtn.addEventListener('click', (e) => {
             e.preventDefault();
-            chatbotWindow.style.display = 'flex'; // فتح نافذة الشات
-            if (contactMenu) contactMenu.classList.remove('active'); // إغلاق القائمة بعد الضغط
+            chatbotWindow.style.display = 'flex';
+            if (contactMenu) contactMenu.classList.remove('active');
         });
     }
 
-    if (closeChat) {
+    if (closeChat && chatbotWindow) {
         closeChat.addEventListener('click', () => {
-            chatbotWindow.style.display = 'none'; // إغلاق نافذة الشات
+            chatbotWindow.style.display = 'none';
         });
     }
 
-    // --- 5. نظام الشات بوت الذكي (محدث بالإجابة الخاصة) ---
     const chatInput = document.getElementById('chat-input');
     const sendBtn = document.getElementById('chat-send-btn');
     const chatBody = document.querySelector('.chat-body');
 
     function appendMessage(text, sender) {
-        const msgDiv = document.createElement('div');
-        msgDiv.classList.add('message', sender);
-        msgDiv.innerHTML = `<p>${text}</p>`;
-        chatBody.appendChild(msgDiv);
+        const msg = document.createElement('div');
+        msg.className = `message ${sender}`;
+        msg.innerHTML = `<p>${text}</p>`;
+        chatBody.appendChild(msg);
         chatBody.scrollTop = chatBody.scrollHeight;
     }
 
     if (sendBtn && chatInput) {
         sendBtn.addEventListener('click', () => {
             const text = chatInput.value.trim();
-            if (text) {
-                appendMessage(text, 'user');
-                chatInput.value = '';
-                
-                let botResponse = "أهلاً بك! 😊 كيف أساعدك اليوم في تقديم شكوى؟";
-                
-                // إضافة الرد المخصص بناءً على طلبك
-                if (text.includes("حسام الرفايعة")) {
-                    botResponse = "شخص يأكله بالمتر.";
-                }
+            if (!text) return;
 
-                setTimeout(() => appendMessage(botResponse, 'bot'), 600);
+            appendMessage(text, 'user');
+            chatInput.value = '';
+
+            let response = 'أهلاً بك! 😊 كيف أساعدك اليوم؟';
+
+            if (text.includes('حسام الرفايعة')) {
+                response = 'شخص يأكله بالمتر.';
             }
+
+            setTimeout(() => appendMessage(response, 'bot'), 600);
         });
     }
 
-    // --- 6. معالجة نموذج "تغيير كلمة المرور" ---
+    /* =========================
+       🔑 Change Password Form
+    ========================= */
     const changePassForm = document.getElementById('change-password-form');
+
     if (changePassForm) {
         changePassForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+
             const old_password = document.getElementById('old-password').value;
             const new_password = document.getElementById('new-password').value;
 
+            if (!token) {
+                alert('انتهت الجلسة، يرجى تسجيل الدخول مرة أخرى');
+                return;
+            }
+
             try {
-                const response = await fetch(`/api/change-password`, {
+                const response = await fetch('/api/change-password', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -124,58 +156,69 @@ document.addEventListener('DOMContentLoaded', async function() {
                 });
 
                 const result = await response.json();
+
                 if (response.ok) {
                     alert('✅ تم تغيير كلمة المرور بنجاح!');
                     changePassModal.style.display = 'none';
                     changePassForm.reset();
                 } else {
-                    alert('❌ خطأ: ' + result.message);
+                    alert('❌ خطأ: ' + (result.message || 'فشل العملية'));
                 }
-            } catch (error) {
-                console.error("Password Change Error:", error);
+
+            } catch (err) {
+                console.error('Password Change Error:', err);
                 alert('حدث خطأ أثناء الاتصال بالسيرفر');
             }
         });
     }
 
-    // --- 7. جلب بيانات الداشبورد (الشكاوى والملف الشخصي) ---
+    /* =========================
+       📊 Dashboard Data
+    ========================= */
     if (token) {
         try {
-            const profileRes = await fetch(`/api/profile`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+            const profileRes = await fetch('/api/profile', {
+                headers: { Authorization: `Bearer ${token}` }
             });
+
             if (profileRes.ok) {
-                const userData = await profileRes.json();
+                const user = await profileRes.json();
                 const welcomeMsg = document.getElementById('welcome-msg');
-                if(welcomeMsg && userData.full_name) {
-                    welcomeMsg.textContent = `مرحباً بك، ${userData.full_name.split(' ')[0]} 👋`;
+                if (welcomeMsg && user.full_name) {
+                    welcomeMsg.textContent = `مرحباً بك، ${user.full_name.split(' ')[0]} 👋`;
                 }
             }
 
-            const complaintsRes = await fetch(`/api/my-complaints`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+            const complaintsRes = await fetch('/api/my-complaints', {
+                headers: { Authorization: `Bearer ${token}` }
             });
+
             if (complaintsRes.ok) {
                 const complaints = await complaintsRes.json();
-                
-                if(document.getElementById('stat-total')) document.getElementById('stat-total').textContent = complaints.length;
-                if(document.getElementById('stat-pending')) document.getElementById('stat-pending').textContent = complaints.filter(c => c.status !== 'completed').length;
-                if(document.getElementById('stat-completed')) document.getElementById('stat-completed').textContent = complaints.filter(c => c.status === 'completed').length;
+
+                document.getElementById('stat-total').textContent = complaints.length;
+                document.getElementById('stat-pending').textContent =
+                    complaints.filter(c => c.status !== 'completed').length;
+                document.getElementById('stat-completed').textContent =
+                    complaints.filter(c => c.status === 'completed').length;
 
                 const tbody = document.getElementById('recent-complaints-body');
                 if (tbody) {
-                    tbody.innerHTML = complaints.length ? '' : '<tr><td colspan="5">لا توجد شكاوى.</td></tr>';
+                    tbody.innerHTML = complaints.length
+                        ? ''
+                        : '<tr><td colspan="5">لا توجد شكاوى.</td></tr>';
+
                     complaints.slice(0, 5).forEach(c => {
                         const date = new Date(c.date_submitted).toLocaleDateString('ar-EG');
-                        // ✅ التعديل المطلوب: تم تغيير زر "عرض" إلى زر "طباعة"
                         tbody.innerHTML += `
                             <tr>
                                 <td>TIC_${c.id}</td>
                                 <td>${c.complaint_type}</td>
                                 <td>${date}</td>
-                                <td><span class="status-badge status-${c.status}">${c.status}</span></td>
-                                <td style="text-align: left;">
-                                    <button onclick="window.print()" class="view-btn" style="background-color: #2ecc71; color: white; border: none; cursor: pointer; padding: 5px 10px; border-radius: 4px;">
+                                <td>${c.status}</td>
+                                <td style="text-align:left;">
+                                    <button onclick="window.print()"
+                                        style="background:#2ecc71;color:#fff;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;">
                                         <i class="fas fa-print"></i> طباعة
                                     </button>
                                 </td>
@@ -183,6 +226,9 @@ document.addEventListener('DOMContentLoaded', async function() {
                     });
                 }
             }
-        } catch (err) { console.error("Error loading dashboard data:", err); }
+
+        } catch (err) {
+            console.error('Dashboard Load Error:', err);
+        }
     }
 });
