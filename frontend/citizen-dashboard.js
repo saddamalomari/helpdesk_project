@@ -167,6 +167,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                     tbody.innerHTML = complaints.length ? '' : '<tr><td colspan="5">لا توجد شكاوى.</td></tr>';
                     complaints.slice(0, 5).forEach(c => {
                         const date = new Date(c.date_submitted).toLocaleDateString('ar-EG');
+                        // ✅ التعديل المطلوب: تم تغيير زر "عرض" إلى زر "طباعة"
                         tbody.innerHTML += `
                             <tr>
                                 <td>TIC_${c.id}</td>
@@ -174,9 +175,9 @@ document.addEventListener('DOMContentLoaded', async function() {
                                 <td>${date}</td>
                                 <td><span class="status-badge status-${c.status}">${c.status}</span></td>
                                 <td style="text-align: left;">
-                                    <a href="view-complaint.html?id=${c.id}" class="view-btn">
-                                        <i class="fas fa-eye"></i> عرض
-                                    </a>
+                                    <button onclick="window.print()" class="view-btn" style="background-color: #2ecc71; color: white; border: none; cursor: pointer; padding: 5px 10px; border-radius: 4px;">
+                                        <i class="fas fa-print"></i> طباعة
+                                    </button>
                                 </td>
                             </tr>`;
                     });
