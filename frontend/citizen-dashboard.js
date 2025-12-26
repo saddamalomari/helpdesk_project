@@ -214,19 +214,20 @@ document.addEventListener('DOMContentLoaded', async function () {
 
                     complaints.slice(0, 5).forEach(c => {
                         const date = new Date(c.date_submitted).toLocaleDateString('ar-EG');
-                        tbody.innerHTML += `
-                            <tr>
-                                <td>TIC_${c.id}</td>
-                                <td>${c.complaint_type}</td>
-                                <td>${date}</td>
-                                <td>${c.status}</td>
-                                <td style="text-align:left;">
-                                    <button onclick="window.print()"
-                                        style="background:#2ecc71;color:#fff;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;">
-                                        <i class="fas fa-print"></i> طباعة
-                                    </button>
-                                </td>
-                            </tr>`;
+ 
+tbody.innerHTML += `
+    <tr>
+        <td>TIC_${c.id}</td>
+        <td>${c.complaint_type}</td>
+        <td>${date}</td>
+        <td>${c.status}</td>
+        <td style="text-align:left;">
+            <button onclick='printComplaint(${JSON.stringify(c)})' 
+                style="background:#2ecc71;color:#fff;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;">
+                <i class="fas fa-print"></i> طباعة
+            </button>
+        </td>
+    </tr>`;
                     });
                 }
             }
@@ -236,3 +237,53 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
     }
 });
+function printComplaint(complaintData) {
+    // إنشاء نافذة جديدة للطباعة
+    const printWindow = window.open('', '_blank');
+    
+    // محتوى الشكوى بتنسيق رسمي
+    const htmlContent = `
+        <html>
+        <head>
+            <title>طباعة شكوى - ${complaintData.id}</title>
+            <style>
+                body { font-family: 'Segoe UI', Tahoma, sans-serif; direction: rtl; padding: 40px; color: #333; }
+                .header { text-align: center; border-bottom: 2px solid #c9a24d; padding-bottom: 20px; margin-bottom: 30px; }
+                .header h1 { color: #0b1c2d; margin: 0; }
+                .info-section { margin-bottom: 20px; line-height: 1.6; }
+                .info-row { display: flex; border-bottom: 1px solid #eee; padding: 10px 0; }
+                .label { font-weight: bold; width: 150px; color: #0b1c2d; }
+                .value { flex: 1; }
+                .footer { margin-top: 50px; text-align: center; font-size: 0.8rem; color: #777; border-top: 1px solid #eee; padding-top: 20px; }
+                @media print { .no-print { display: none; } }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <h1>نظام المساعدة والدعم (Alomari Help Desk)</h1>
+                <p>نموذج تفاصيل الشكوى الرسمي</p>
+            </div>
+            
+            <div class="info-section">
+                <div class="info-row"><div class="label">رقم المرجع:</div><div class="value">TIC_${complaintData.id}</div></div>
+                <div class="info-row"><div class="label">نوع الشكوى:</div><div class="value">${complaintData.complaint_type}</div></div>
+                <div class="info-row"><div class="label">تاريخ التقديم:</div><div class="value">${new Date(complaintData.date_submitted).toLocaleDateString('ar-EG')}</div></div>
+                <div class="info-row"><div class="label">الحالة الحالية:</div><div class="value">${complaintData.status}</div></div>
+                <div class="info-row"><div class="label">تفاصيل المشكلة:</div><div class="value">${complaintData.description || 'لا يوجد وصف إضافي'}</div></div>
+            </div>
+
+            <div class="footer">
+                <p>تم استخراج هذا المستند إلكترونياً بتاريخ: ${new Date().toLocaleString('ar-EG')}</p>
+                <p>العقبة، الأردن</p>
+            </div>
+
+            <script>
+                window.onload = function() { window.print(); window.close(); }
+            </script>
+        </body>
+        </html>
+    `;
+
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+}

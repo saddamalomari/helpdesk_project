@@ -376,43 +376,14 @@ body {
    🖨️ Print Mode
 ========================= */
 @media print {
-    body {
-        background: #fff;
-        color: #000;
+  
+    body * {
+        visibility: hidden;
     }
 
-    .sidebar,
-    .toggle-btn,
-    .chatbot-window,
-    .actions-row,
-    button,
-   .sidebar a,
-.actions-row a {
-    display: none !important;
-}
-
-
-    .main-content {
-        margin: 0;
-        padding: 20px;
+    .printable-area, .printable-area * {
+        visibility: visible;
     }
-
-    .welcome-banner {
-        border: 2px solid #000;
-        box-shadow: none;
-        background: none;
-    }
-}
-#contact-menu {
-    display: none;
-}
-#contact-menu.active {
-    display: block;
-}
-
-#contact-toggle.active .arrow {
-    transform: rotate(180deg);
-    transition: transform 0.3s ease;
 }
 /* =========================
    🔐 Change Password Modal (Popup)
