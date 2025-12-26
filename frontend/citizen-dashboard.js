@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     const contactMenu = document.getElementById('contact-menu');
 
     if (contactMenu) {
-        contactMenu.classList.remove('active'); // إغلاق إجباري عند التحميل
+        contactMenu.classList.remove('active'); 
     }
 
     if (contactToggle && contactMenu) {
@@ -57,7 +57,9 @@ document.addEventListener('DOMContentLoaded', async function () {
     const changePassToggle = document.getElementById('change-password-toggle');
     const changePassModal = document.getElementById('change-password-modal');
     const closePassModal = document.getElementById('close-pass-modal');
+    const changePassForm = document.getElementById('change-password-form');
 
+    // فتح المودال
     if (changePassToggle && changePassModal) {
         changePassToggle.addEventListener('click', (e) => {
             e.preventDefault();
@@ -65,12 +67,14 @@ document.addEventListener('DOMContentLoaded', async function () {
         });
     }
 
+    // إغلاق المودال (الزر)
     if (closePassModal && changePassModal) {
         closePassModal.addEventListener('click', () => {
             changePassModal.style.display = 'none';
         });
     }
 
+    // إغلاق المودال (عند الضغط خارج الصندوق)
     window.addEventListener('click', (e) => {
         if (e.target === changePassModal) {
             changePassModal.style.display = 'none';
@@ -78,62 +82,11 @@ document.addEventListener('DOMContentLoaded', async function () {
     });
 
     /* =========================
-       🤖 Chatbot
+       🔑 Submit Change Password
     ========================= */
-    const chatbotBtn = document.getElementById('chatbot-btn');
-    const chatbotWindow = document.getElementById('chatbot-window');
-    const closeChat = document.getElementById('close-chat');
-
-    if (chatbotBtn && chatbotWindow) {
-        chatbotBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            chatbotWindow.style.display = 'flex';
-            if (contactMenu) contactMenu.classList.remove('active');
-        });
-    }
-
-    if (closeChat && chatbotWindow) {
-        closeChat.addEventListener('click', () => {
-            chatbotWindow.style.display = 'none';
-        });
-    }
-
-    const chatInput = document.getElementById('chat-input');
-    const sendBtn = document.getElementById('chat-send-btn');
-    const chatBody = document.querySelector('.chat-body');
-
-    function appendMessage(text, sender) {
-        const msg = document.createElement('div');
-        msg.className = `message ${sender}`;
-        msg.innerHTML = `<p>${text}</p>`;
-        chatBody.appendChild(msg);
-        chatBody.scrollTop = chatBody.scrollHeight;
-    }
-
-    if (sendBtn && chatInput) {
-        sendBtn.addEventListener('click', () => {
-            const text = chatInput.value.trim();
-            if (!text) return;
-
-            appendMessage(text, 'user');
-            chatInput.value = '';
-
-            let response = 'أهلاً بك! 😊 كيف أساعدك اليوم؟';
-
-            if (text.includes('حسام الرفايعة')) {
-                response = 'شخص يأكله بالمتر.';
-            }
-
-            setTimeout(() => appendMessage(response, 'bot'), 600);
-        });
-    }
-
-    /* =========================
-       🔑 Change Password Form
-    ========================= */
-    const changePassForm = document.getElementById('change-password-form');
-
     if (changePassForm) {
+        console.log("✅ تم ربط نموذج تغيير كلمة المرور بنجاح");
+
         changePassForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -164,7 +117,6 @@ document.addEventListener('DOMContentLoaded', async function () {
                 } else {
                     alert('❌ خطأ: ' + (result.message || 'فشل العملية'));
                 }
-
             } catch (err) {
                 console.error('Password Change Error:', err);
                 alert('حدث خطأ أثناء الاتصال بالسيرفر');
@@ -173,10 +125,60 @@ document.addEventListener('DOMContentLoaded', async function () {
     }
 
     /* =========================
-       📊 Dashboard Data
+       🤖 Chatbot Logic
+    ========================= */
+    const chatbotBtn = document.getElementById('chatbot-btn');
+    const chatbotWindow = document.getElementById('chatbot-window');
+    const closeChat = document.getElementById('close-chat');
+    const chatInput = document.getElementById('chat-input');
+    const sendBtn = document.getElementById('chat-send-btn');
+    const chatBody = document.querySelector('.chat-body');
+
+    function appendMessage(text, sender) {
+        const msg = document.createElement('div');
+        msg.className = `message ${sender}`;
+        msg.innerHTML = `<p>${text}</p>`;
+        chatBody.appendChild(msg);
+        chatBody.scrollTop = chatBody.scrollHeight;
+    }
+
+    if (chatbotBtn && chatbotWindow) {
+        chatbotBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            chatbotWindow.style.display = 'flex';
+            if (contactMenu) contactMenu.classList.remove('active');
+        });
+    }
+
+    if (closeChat && chatbotWindow) {
+        closeChat.addEventListener('click', () => {
+            chatbotWindow.style.display = 'none';
+        });
+    }
+
+    if (sendBtn && chatInput) {
+        sendBtn.addEventListener('click', () => {
+            const text = chatInput.value.trim();
+            if (!text) return;
+
+            appendMessage(text, 'user');
+            chatInput.value = '';
+
+            let response = 'أهلاً بك! 😊 كيف أساعدك اليوم؟';
+            if (text.includes('حسام الرفايعة')) {
+                response = 'شخص يأكله بالمتر.';
+            }
+
+            setTimeout(() => appendMessage(response, 'bot'), 600);
+        });
+    }
+
+    /* =========================
+       📊 Dashboard Data (Fetch)
     ========================= */
     if (token) {
         try {
+            // جلب بيانات البروفايل
             const profileRes = await fetch('/api/profile', {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -189,6 +191,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 }
             }
 
+            // جلب الشكاوى
             const complaintsRes = await fetch('/api/my-complaints', {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -196,17 +199,18 @@ document.addEventListener('DOMContentLoaded', async function () {
             if (complaintsRes.ok) {
                 const complaints = await complaintsRes.json();
 
-                document.getElementById('stat-total').textContent = complaints.length;
-                document.getElementById('stat-pending').textContent =
-                    complaints.filter(c => c.status !== 'completed').length;
-                document.getElementById('stat-completed').textContent =
-                    complaints.filter(c => c.status === 'completed').length;
+                // تحديث الإحصائيات
+                const statTotal = document.getElementById('stat-total');
+                const statPending = document.getElementById('stat-pending');
+                const statCompleted = document.getElementById('stat-completed');
+
+                if(statTotal) statTotal.textContent = complaints.length;
+                if(statPending) statPending.textContent = complaints.filter(c => c.status !== 'completed').length;
+                if(statCompleted) statCompleted.textContent = complaints.filter(c => c.status === 'completed').length;
 
                 const tbody = document.getElementById('recent-complaints-body');
                 if (tbody) {
-                    tbody.innerHTML = complaints.length
-                        ? ''
-                        : '<tr><td colspan="5">لا توجد شكاوى.</td></tr>';
+                    tbody.innerHTML = complaints.length ? '' : '<tr><td colspan="5">لا توجد شكاوى.</td></tr>';
 
                     complaints.slice(0, 5).forEach(c => {
                         const date = new Date(c.date_submitted).toLocaleDateString('ar-EG');
