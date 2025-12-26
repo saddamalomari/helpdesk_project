@@ -414,3 +414,89 @@ body {
     transform: rotate(180deg);
     transition: transform 0.3s ease;
 }
+/* =========================
+   🔐 Change Password Modal (Popup)
+========================= */
+.modal {
+    display: none; /* مخفي افتراضياً */
+    position: fixed;
+    z-index: 3000; /* أعلى من القائمة والتشات بوت */
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(7, 18, 29, 0.85); /* خلفية داكنة شفافة */
+    backdrop-filter: blur(8px); /* تأثير الضبابية */
+    justify-content: center;
+    align-items: center;
+    transition: var(--transition);
+}
+
+.modal-content {
+    background: var(--navy-light);
+    border: 1px solid var(--gold);
+    border-radius: var(--radius);
+    padding: 30px;
+    width: 90%;
+    max-width: 450px;
+    box-shadow: var(--shadow-soft);
+    position: relative;
+    color: var(--white);
+    animation: modalAppear 0.4s ease-out; /* حركة دخول النافذة */
+}
+
+/* حركة ظهور النافذة من الأعلى */
+@keyframes modalAppear {
+    from { transform: translateY(-30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.modal-content h3 {
+    color: var(--gold);
+    margin-bottom: 20px;
+    text-align: center;
+    font-size: 1.5rem;
+}
+
+.modal-content .input-group {
+    margin-bottom: 15px;
+}
+
+.modal-content label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--gold-soft);
+    font-size: 0.9rem;
+}
+
+.modal-content input {
+    width: 100%;
+    padding: 12px;
+    background: var(--glass);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    color: var(--white);
+    outline: none;
+    transition: var(--transition);
+}
+
+.modal-content input:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 8px rgba(201, 162, 77, 0.3);
+}
+
+/* زر الإغلاق */
+.close-btn {
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    font-size: 24px;
+    color: #888;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.close-btn:hover {
+    color: var(--gold);
+    transform: rotate(90deg);
+}
